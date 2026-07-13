@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import ReturnList from './pages/ReturnList'
 import NewList from './pages/NewList'
 import RequestForm from './pages/RequestForm'
@@ -30,6 +30,16 @@ function PublicHeader() {
   )
 }
 
+function PublicFooter() {
+  return (
+    <footer className="mx-auto max-w-3xl px-4 py-6 text-center">
+      <Link to="/admin/login" className="text-xs text-bakfg/30 transition-colors hover:text-bakfg/60">
+        ניהול
+      </Link>
+    </footer>
+  )
+}
+
 export default function App() {
   return (
     <Routes>
@@ -51,6 +61,7 @@ export default function App() {
               <Route path="/new" element={<NewList />} />
               <Route path="/request/:requestType" element={<RequestForm />} />
             </Routes>
+            <PublicFooter />
           </>
         }
       />
