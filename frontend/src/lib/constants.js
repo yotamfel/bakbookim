@@ -1,0 +1,29 @@
+// Mirrors backend/app/constants.py — keep the two in sync.
+export const CATEGORIES = [
+  'וויסקי',
+  'וודקה',
+  "ג'ין",
+  'רום',
+  'טקילה',
+  'יין',
+  'מבעבעים/שמפניה',
+  'בירה',
+  'ליקר',
+  'ברנדי/קוניאק',
+  'אחר',
+]
+
+export const RANGE_OPTIONS = [
+  { value: 'week', label: 'שבוע' },
+  { value: 'month', label: 'חודש' },
+  { value: '3months', label: '3 חודשים' },
+  { value: '6months', label: 'חצי שנה' },
+  { value: 'year', label: 'שנה' },
+]
+
+export const SORT_OPTIONS = [
+  { value: 'top', label: 'הכי מבוקש' },
+  { value: 'unique', label: 'משתמשים ייחודיים' },
+  { value: 'trending', label: 'טרנדינג' },
+  { value: 'newest', label: 'חדש לגמרי' },
+]

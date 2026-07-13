@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Colors lifted from bakbookim.com's live theme CSS variables (see SETUP_GUIDE.md notes) */
+  --color-bakbg: #f9f9f9;
+  --color-bakbg-soft: #f6f6f6;
+  --color-bakfg: #121212;
+  --color-brand: #484bdd;
+  --color-brand-dark: #334fb4;
+  --color-brand-bright: #4f53ff;
+  --color-navy: #0b0633;
+  --color-accent: #b586ff;
+
+  --font-sans: 'Assistant', system-ui, sans-serif;
+  --font-heading: 'Miriam Libre', 'Alef', system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bakbg);
+  color: var(--color-bakfg);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+}
