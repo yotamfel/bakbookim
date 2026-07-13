@@ -84,7 +84,9 @@ export default function ClustersManager() {
                 <Th title='טקסט חופשי שיוצג ברשימה הציבורית ליד המוצר, למשל "בקרוב" או "סופק בפרויקט קיץ 2026". ריק = לא מוצג כלום'>
                   הודעה לציבור
                 </Th>
-                <Th>מיזוג לתוך מוצר אחר</Th>
+                <Th title="לתיקון טעות קיבוץ של ה-AI: לאחד שני מוצרים לאחד. מוצגים רק מוצרים אחרים מאותו סוג בקשה (חזרה/חדש), כי אלה לעולם לא מתערבבים">
+                  מיזוג לתוך מוצר אחר
+                </Th>
                 <Th>פעולות</Th>
               </tr>
             </thead>
@@ -110,25 +112,37 @@ export default function ClustersManager() {
                     </div>
                   </Td>
                   <Td>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={mergeTarget[cluster.id] || ''}
-                        onChange={(e) => setMergeTarget((m) => ({ ...m, [cluster.id]: e.target.value }))}
-                        className="rounded border border-black/10 px-2 py-1"
-                      >
-                        <option value="">בחר יעד...</option>
-                        {clusters
-                          .filter((c) => c.id !== cluster.id && c.request_type === cluster.request_type)
-                          .map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.canonical_name}
-                            </option>
-                          ))}
-                      </select>
-                      <button onClick={() => askMerge(cluster.id)} className="text-sm text-red-600">
-                        מזג
-                      </button>
-                    </div>
+                    {(() => {
+                      const sameTrackOthers = clusters.filter(
+                        (c) => c.id !== cluster.id && c.request_type === cluster.request_type
+                      )
+                      if (sameTrackOthers.length === 0) {
+                        return (
+                          <span className="text-xs text-bakfg/40">
+                            אין עוד מוצר באותו סוג בקשה למיזוג
+                          </span>
+                        )
+                      }
+                      return (
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={mergeTarget[cluster.id] || ''}
+                            onChange={(e) => setMergeTarget((m) => ({ ...m, [cluster.id]: e.target.value }))}
+                            className="rounded border border-black/10 px-2 py-1"
+                          >
+                            <option value="">בחר יעד...</option>
+                            {sameTrackOthers.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.canonical_name}
+                              </option>
+                            ))}
+                          </select>
+                          <button onClick={() => askMerge(cluster.id)} className="text-sm text-red-600">
+                            מזג
+                          </button>
+                        </div>
+                      )
+                    })()}
                   </Td>
                   <Td>
                     <button onClick={() => askDeleteAllForProduct(cluster)} className="text-sm text-red-600">

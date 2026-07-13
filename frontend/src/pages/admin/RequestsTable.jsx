@@ -35,6 +35,7 @@ export default function RequestsTable() {
     setEditDraft({
       category: row.category,
       original_text: row.original_text,
+      reason: row.reason || '',
       submitter_name: row.submitter_name || '',
       submitter_phone: row.submitter_phone || '',
     })
@@ -80,6 +81,12 @@ export default function RequestsTable() {
     })
   }
 
+  function handleDeleteMenu(row, action) {
+    if (action === 'single') askDelete(row)
+    else if (action === 'submitter') askDeleteAllFromSubmitter(row)
+    else if (action === 'product') askDeleteAllForProduct(row)
+  }
+
   async function runConfirmed() {
     const action = confirmState?.action
     setConfirmState(null)
@@ -105,12 +112,13 @@ export default function RequestsTable() {
 
       {!loading && !error && (
         <div className="mt-4 overflow-x-auto rounded-xl border border-black/10 bg-white">
-          <table className="w-full min-w-[1000px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-bakbg-soft text-bakfg/70">
               <tr>
                 <Th>תאריך</Th>
                 <Th>מוצר (canonical)</Th>
                 <Th>טקסט מקורי</Th>
+                <Th title='למה המשתמש רוצה את המוצר הזה (שדה אופציונלי בטופס)'>הסבר</Th>
                 <Th>שם</Th>
                 <Th>טלפון</Th>
                 <Th title="חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע">
@@ -135,6 +143,17 @@ export default function RequestsTable() {
                         />
                       ) : (
                         row.original_text
+                      )}
+                    </Td>
+                    <Td wrap>
+                      {isEditing ? (
+                        <input
+                          value={editDraft.reason}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, reason: e.target.value }))}
+                          className="w-full rounded border border-black/10 px-2 py-1"
+                        />
+                      ) : (
+                        row.reason || '—'
                       )}
                     </Td>
                     <Td>
@@ -171,21 +190,27 @@ export default function RequestsTable() {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
                           <button onClick={() => startEdit(row)} className="text-brand">
                             עריכה
                           </button>
-                          <button onClick={() => askDelete(row)} className="text-red-600">
-                            מחיקה
-                          </button>
-                          {(row.submitter_phone || row.submitter_name) && (
-                            <button onClick={() => askDeleteAllFromSubmitter(row)} className="text-red-600">
-                              מחק הכל ממשתמש זה
-                            </button>
-                          )}
-                          <button onClick={() => askDeleteAllForProduct(row)} className="text-red-600">
-                            מחק הכל למוצר זה
-                          </button>
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              handleDeleteMenu(row, e.target.value)
+                              e.target.value = ''
+                            }}
+                            className="rounded border border-black/10 px-1 py-1 text-red-600"
+                          >
+                            <option value="" disabled>
+                              מחיקה...
+                            </option>
+                            <option value="single">מחק בקשה זו בלבד</option>
+                            {(row.submitter_phone || row.submitter_name) && (
+                              <option value="submitter">מחק הכל ממשתמש זה</option>
+                            )}
+                            <option value="product">מחק הכל למוצר זה</option>
+                          </select>
                         </div>
                       )}
                     </Td>

@@ -89,6 +89,7 @@ class AdminRequestOut(BaseModel):
     canonical_brand: str | None
     canonical_variant: str | None
     original_text: str
+    reason: str | None
     submitter_name: str | None
     submitter_phone: str | None
     cluster_id: uuid.UUID
@@ -100,6 +101,7 @@ class AdminRequestOut(BaseModel):
 class AdminRequestUpdateIn(BaseModel):
     category: str | None = None
     original_text: str | None = None
+    reason: str | None = None
     submitter_name: str | None = None
     submitter_phone: str | None = None
     cluster_id: uuid.UUID | None = None
