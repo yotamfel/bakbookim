@@ -2,7 +2,7 @@ import { CATEGORIES, RANGE_OPTIONS, SORT_OPTIONS } from '../lib/constants'
 
 export default function FilterBar({ sort, setSort, category, setCategory, range, setRange }) {
   return (
-    <div className="flex flex-wrap gap-3 rounded-xl bg-white p-3 shadow-sm">
+    <div className="flex flex-wrap gap-3 rounded-2xl border border-black/5 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
       <Select label="מיון" value={sort} onChange={setSort} options={SORT_OPTIONS} />
       <Select
         label="קטגוריה"
@@ -22,7 +22,7 @@ function Select({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 rounded-lg border border-black/10 px-2 py-1.5"
+        className="mt-1 rounded-lg border border-black/10 bg-white px-2 py-1.5"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

@@ -32,10 +32,10 @@ export default function ClusterCard({ cluster, requestType, onJoined }) {
   }
 
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-black/5 bg-white/90 p-4 shadow-sm backdrop-blur-sm transition-shadow duration-200 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-heading text-lg font-bold text-bakfg">{cluster.canonical_name}</h3>
             {isFulfilled && (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
@@ -43,25 +43,25 @@ export default function ClusterCard({ cluster, requestType, onJoined }) {
               </span>
             )}
           </div>
-          <p className="text-sm text-bakfg/60">{cluster.category}</p>
+          <p className="text-sm text-bakfg/50">{cluster.category}</p>
         </div>
-        <div className="shrink-0 text-left">
-          <div className="text-2xl font-bold text-brand">{cluster.total_requests}</div>
-          <div className="text-xs text-bakfg/50">בקשות</div>
+        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full bg-brand/10">
+          <span className="text-lg font-bold leading-none text-brand">{cluster.total_requests}</span>
+          <span className="mt-0.5 text-[10px] text-brand/70">בקשות</span>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <button
           onClick={() => setShowJoin(true)}
-          className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white"
+          className="rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           גם אני רוצה את זה 🙋
         </button>
         {requestType === 'new' && (
           <button
             onClick={toggleReasons}
-            className="rounded-lg border border-black/10 px-3 py-1.5 text-sm text-bakfg/80"
+            className="rounded-full border border-black/10 px-4 py-1.5 text-sm text-bakfg/80 transition-colors hover:bg-bakbg-soft"
           >
             למה מבקשים את זה? 💬
           </button>
@@ -69,7 +69,7 @@ export default function ClusterCard({ cluster, requestType, onJoined }) {
       </div>
 
       {showReasons && (
-        <div className="mt-3 rounded-lg bg-bakbg-soft p-3 text-sm">
+        <div className="mt-3 rounded-xl bg-bakbg-soft p-3 text-sm">
           {loadingReasons && !reasons && <p className="text-bakfg/60">טוען...</p>}
           {reasons && (
             <>

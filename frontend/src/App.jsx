@@ -9,12 +9,14 @@ import ClustersManager from './pages/admin/ClustersManager'
 
 function PublicHeader() {
   const linkClass = ({ isActive }) =>
-    `rounded-lg px-4 py-2 text-sm font-medium ${isActive ? 'bg-brand text-white' : 'text-bakfg/70'}`
+    `rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+      isActive ? 'bg-white text-navy shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white'
+    }`
 
   return (
-    <header className="border-b border-black/10 bg-white">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <span className="font-heading text-xl font-bold text-navy">bakbookim — בקשות קהילה</span>
+    <header className="bg-gradient-to-l from-navy via-navy to-brand-dark shadow-md">
+      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
+        <span className="font-heading text-xl font-bold text-white">bakbookim — בקשות קהילה</span>
         <nav className="flex gap-2">
           <NavLink to="/return" className={linkClass}>
             בקשות לחזרה

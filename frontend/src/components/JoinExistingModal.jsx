@@ -29,23 +29,23 @@ export default function JoinExistingModal({ cluster, onClose, onJoined }) {
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl bg-bakbg p-6 shadow-xl"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
       >
-        <h3 className="text-lg font-bold text-bakfg">גם אני רוצה את זה 🙋</h3>
+        <h3 className="font-heading text-lg font-bold text-bakfg">גם אני רוצה את זה 🙋</h3>
         <p className="mt-1 text-sm text-bakfg/70">{cluster.canonical_name}</p>
 
         <label className="mt-4 block text-sm font-medium text-bakfg">שם (אופציונלי)</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
         />
 
         <label className="mt-3 block text-sm font-medium text-bakfg">טלפון (אופציונלי)</label>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
         />
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -54,11 +54,15 @@ export default function JoinExistingModal({ cluster, onClose, onJoined }) {
           <button
             type="submit"
             disabled={submitting}
-            className="flex-1 rounded-lg bg-brand px-4 py-2 font-medium text-white disabled:opacity-50"
+            className="flex-1 rounded-full bg-brand px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-brand-dark disabled:opacity-50"
           >
             {submitting ? 'שולח...' : 'שלח'}
           </button>
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-black/10 px-4 py-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-full border border-black/10 px-4 py-2 transition-colors hover:bg-bakbg-soft"
+          >
             ביטול
           </button>
         </div>

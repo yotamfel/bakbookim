@@ -38,7 +38,7 @@ export default function ClusterListPage({ requestType, title }) {
         <h1 className="font-heading text-2xl font-bold text-bakfg">{title}</h1>
         <Link
           to={`/request/${requestType}`}
-          className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white"
+          className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           שליחת בקשה
         </Link>
@@ -49,10 +49,12 @@ export default function ClusterListPage({ requestType, title }) {
       </div>
 
       <div className="mt-4 space-y-3">
-        {loading && <p className="text-bakfg/60">טוען...</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {loading && <p className="px-1 text-bakfg/60">טוען...</p>}
+        {error && <p className="px-1 text-red-600">{error}</p>}
         {!loading && !error && items.length === 0 && (
-          <p className="text-bakfg/60">אין עדיין בקשות בטווח/סינון הנבחר.</p>
+          <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-6 text-center text-bakfg/60">
+            אין עדיין בקשות בטווח/סינון הנבחר.
+          </div>
         )}
         {items.map((cluster) => (
           <ClusterCard key={cluster.cluster_id} cluster={cluster} requestType={requestType} />

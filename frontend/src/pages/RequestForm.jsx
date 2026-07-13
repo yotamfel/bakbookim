@@ -56,11 +56,14 @@ export default function RequestForm() {
   if (done) {
     return (
       <div className="mx-auto max-w-xl px-4 py-10 text-center">
-        <h1 className="font-heading text-2xl font-bold text-bakfg">תודה! הבקשה נקלטה 🙌</h1>
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-3xl">
+          🙌
+        </div>
+        <h1 className="font-heading text-2xl font-bold text-bakfg">תודה! הבקשה נקלטה</h1>
         <p className="mt-2 text-bakfg/70">היא כבר שויכה לרשימה הציבורית המתאימה.</p>
         <button
           onClick={() => navigate(isNew ? '/new' : '/return')}
-          className="mt-6 rounded-lg bg-brand px-5 py-2 font-medium text-white"
+          className="mt-6 rounded-full bg-brand px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           חזרה לרשימה
         </button>
@@ -75,7 +78,7 @@ export default function RequestForm() {
       </h1>
 
       {items.map((item, index) => (
-        <div key={index} className="mt-4 rounded-xl border border-black/10 bg-white p-4">
+        <div key={index} className="mt-4 rounded-2xl border border-black/5 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-bakfg/70">מוצר {index + 1}</span>
             {items.length > 1 && (
@@ -89,7 +92,7 @@ export default function RequestForm() {
           <select
             value={item.category}
             onChange={(e) => updateItem(index, 'category', e.target.value)}
-            className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -106,7 +109,7 @@ export default function RequestForm() {
             value={item.original_text}
             onChange={(e) => updateItem(index, 'original_text', e.target.value)}
             placeholder="לדוגמה: מקאלן 18 / Macallan 18"
-            className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
 
           {isNew && (
@@ -116,7 +119,7 @@ export default function RequestForm() {
                 value={item.reason}
                 onChange={(e) => updateItem(index, 'reason', e.target.value)}
                 placeholder="נשמח שתכתבו למה אתם רוצים את המוצר הזה — זה עוזר לשאר חברי הקהילה להכיר מוצרים חדשים 😊"
-                className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+                className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
                 rows={3}
               />
             </>
@@ -127,23 +130,23 @@ export default function RequestForm() {
       <button
         type="button"
         onClick={addItem}
-        className="mt-3 w-full rounded-lg border border-dashed border-black/20 px-4 py-2 text-sm text-bakfg/70"
+        className="mt-3 w-full rounded-xl border border-dashed border-black/20 px-4 py-2 text-sm text-bakfg/70 transition-colors hover:border-brand hover:bg-brand/5 hover:text-brand"
       >
         + הוסף מוצר נוסף
       </button>
 
-      <div className="mt-6 rounded-xl border border-black/10 bg-white p-4">
+      <div className="mt-6 rounded-2xl border border-black/5 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
         <label className="block text-sm text-bakfg/70">שם (אופציונלי)</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
         />
         <label className="mt-3 block text-sm text-bakfg/70">טלפון (אופציונלי)</label>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
         />
       </div>
 
@@ -152,7 +155,7 @@ export default function RequestForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 w-full rounded-lg bg-brand px-4 py-3 font-medium text-white disabled:opacity-50"
+        className="mt-6 w-full rounded-full bg-brand px-4 py-3 font-medium text-white shadow-sm transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
         {submitting ? 'שולח...' : 'שליחת הבקשה'}
       </button>

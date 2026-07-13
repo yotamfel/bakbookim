@@ -22,9 +22,14 @@ body {
 
 body {
   margin: 0;
-  background: var(--color-bakbg);
   color: var(--color-bakfg);
   font-family: var(--font-sans);
+  background-color: var(--color-bakbg);
+  background-image:
+    radial-gradient(1100px 550px at 100% -8%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 60%),
+    radial-gradient(900px 480px at 0% -4%, color-mix(in srgb, var(--color-brand) 16%, transparent), transparent 62%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 h1,
