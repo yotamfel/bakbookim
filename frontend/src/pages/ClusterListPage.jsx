@@ -4,7 +4,7 @@ import ClusterCard from '../components/ClusterCard'
 import FilterBar from '../components/FilterBar'
 import { api } from '../lib/api'
 
-export default function ClusterListPage({ requestType, title }) {
+export default function ClusterListPage({ requestType, title, subtitle }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -35,7 +35,10 @@ export default function ClusterListPage({ requestType, title }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-bold text-bakfg">{title}</h1>
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-bakfg">{title}</h1>
+          {subtitle && <p className="mt-0.5 text-sm text-bakfg/50">{subtitle}</p>}
+        </div>
         <Link
           to="/request"
           className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
@@ -44,7 +47,7 @@ export default function ClusterListPage({ requestType, title }) {
         </Link>
       </div>
 
-      <div className="mt-4 rounded-3xl bg-gradient-to-b from-brand-dark to-brand p-4 shadow-lg sm:p-6">
+      <div className="mt-4 rounded-3xl bg-gradient-to-b from-panel to-brand-dark p-4 shadow-lg sm:p-6">
         <FilterBar sort={sort} setSort={setSort} category={category} setCategory={setCategory} range={range} setRange={setRange} />
 
         <div className="mt-4 space-y-3">
