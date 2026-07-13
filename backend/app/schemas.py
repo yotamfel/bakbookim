@@ -124,6 +124,7 @@ class AdminClusterOut(BaseModel):
 class AdminClusterUpdateIn(BaseModel):
     status_note: str | None = None
     canonical_name: str | None = None
+    request_type: RequestType | None = None
 
 
 class AdminClusterMergeIn(BaseModel):

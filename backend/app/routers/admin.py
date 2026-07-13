@@ -180,8 +180,20 @@ def update_cluster(
     cluster = db.get(Cluster, cluster_id)
     if cluster is None:
         raise HTTPException(status_code=404, detail="מוצר לא נמצא")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+
+    updates = payload.model_dump(exclude_unset=True)
+    for field, value in updates.items():
         setattr(cluster, field, value)
+
+    # Moving a product to the other track (someone tagged it wrong at submission time) should
+    # bring its existing requests along, so the admin table stays consistent with the product.
+    if "request_type" in updates:
+        db.execute(
+            RequestModel.__table__.update()
+            .where(RequestModel.cluster_id == cluster.id)
+            .values(request_type=updates["request_type"])
+        )
+
     db.commit()
     db.refresh(cluster)
     return AdminClusterOut.model_validate(cluster)
@@ -193,6 +205,8 @@ def merge_clusters(
 ) -> AdminClusterOut:
     """Manual fix for AI mis-clustering (SPEC.md section 10.2), e.g. whiskey wrongly grouped with
     bourbon — moves every request from source into target and deletes the now-empty source.
+    Merging across tracks (return/new) is allowed — e.g. someone tagged a request "new" when the
+    product actually already existed — the merged requests adopt the target's track.
     Manual "split" is done from the requests table instead: editing a request's cluster_id
     (PATCH /admin/requests/{id}) moves it to a different (or brand-new) cluster one at a time."""
     source = db.get(Cluster, payload.source_cluster_id)
@@ -201,11 +215,11 @@ def merge_clusters(
         raise HTTPException(status_code=404, detail="מוצר לא נמצא")
     if source.id == target.id:
         raise HTTPException(status_code=400, detail="לא ניתן למזג מוצר לתוך עצמו")
-    if source.request_type != target.request_type:
-        raise HTTPException(status_code=400, detail="לא ניתן למזג מוצרים ממסלולים שונים (חזרה/חדש)")
 
     db.execute(
-        RequestModel.__table__.update().where(RequestModel.cluster_id == source.id).values(cluster_id=target.id)
+        RequestModel.__table__.update()
+        .where(RequestModel.cluster_id == source.id)
+        .values(cluster_id=target.id, request_type=target.request_type)
     )
 
     identifiers = db.execute(

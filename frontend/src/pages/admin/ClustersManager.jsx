@@ -32,14 +32,30 @@ export default function ClustersManager() {
     })
   }
 
-  function askMerge(sourceId) {
-    const targetId = mergeTarget[sourceId]
+  function askMerge(source) {
+    const targetId = mergeTarget[source.id]
     if (!targetId) return
+    const target = clusters.find((c) => c.id === targetId)
+    const crossTrackNote =
+      target && target.request_type !== source.request_type
+        ? ' שימו לב: המיזוג יעביר את המוצר למסלול של היעד.'
+        : ''
     setConfirmState({
-      message: 'למזג את המוצר הזה לתוך היעד שנבחר? הפעולה בלתי הפיכה.',
+      message: `למזג את "${source.canonical_name}" לתוך "${target?.canonical_name}"? הפעולה בלתי הפיכה.${crossTrackNote}`,
       action: async () => {
-        await api.adminMergeClusters(sourceId, targetId)
+        await api.adminMergeClusters(source.id, targetId)
         load()
+      },
+    })
+  }
+
+  function askChangeTrack(cluster, newType) {
+    const label = newType === 'return' ? 'חזרה' : 'חדש'
+    setConfirmState({
+      message: `להעביר את "${cluster.canonical_name}" למסלול "${label}"? כל הבקשות שלו יעברו יחד איתו.`,
+      action: async () => {
+        const updated = await api.adminUpdateCluster(cluster.id, { request_type: newType })
+        setClusters((prev) => prev.map((c) => (c.id === cluster.id ? updated : c)))
       },
     })
   }
@@ -72,7 +88,7 @@ export default function ClustersManager() {
               <tr>
                 <Th>שם מוצר</Th>
                 <Th>קטגוריה</Th>
-                <Th title="חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע">
+                <Th title='חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע. ניתן לשנות אם מישהו סימן בטעות'>
                   סוג בקשה
                 </Th>
                 <Th title="כמה בקשות הוגשו למוצר הזה בסך הכל (כולל אם אותו אדם ביקש כמה פעמים)">
@@ -84,7 +100,7 @@ export default function ClustersManager() {
                 <Th title='טקסט חופשי שיוצג ברשימה הציבורית ליד המוצר, למשל "בקרוב" או "סופק בפרויקט קיץ 2026". ריק = לא מוצג כלום'>
                   הודעה לציבור
                 </Th>
-                <Th title="לתיקון טעות קיבוץ של ה-AI: לאחד שני מוצרים לאחד. מוצגים רק מוצרים אחרים מאותו סוג בקשה (חזרה/חדש), כי אלה לעולם לא מתערבבים">
+                <Th title='לתיקון טעות קיבוץ של ה-AI, כולל בין מסלולים (למשל אם מוצר סומן "חדש" אבל בעצם כבר היה) - המוצר שנבחר כיעד "מנצח" וקובע את הסטטוס/מסלול הסופיים'>
                   מיזוג לתוך מוצר אחר
                 </Th>
                 <Th>פעולות</Th>
@@ -95,7 +111,16 @@ export default function ClustersManager() {
                 <tr key={cluster.id} className="border-t border-black/5">
                   <Td wrap>{cluster.canonical_name}</Td>
                   <Td>{cluster.category}</Td>
-                  <Td>{cluster.request_type === 'return' ? 'חזרה' : 'חדש'}</Td>
+                  <Td>
+                    <select
+                      value={cluster.request_type}
+                      onChange={(e) => askChangeTrack(cluster, e.target.value)}
+                      className="rounded border border-black/10 px-2 py-1"
+                    >
+                      <option value="return">חזרה</option>
+                      <option value="new">חדש</option>
+                    </select>
+                  </Td>
                   <Td>{cluster.total_requests}</Td>
                   <Td>{cluster.unique_submitters}</Td>
                   <Td wrap>
@@ -113,15 +138,9 @@ export default function ClustersManager() {
                   </Td>
                   <Td>
                     {(() => {
-                      const sameTrackOthers = clusters.filter(
-                        (c) => c.id !== cluster.id && c.request_type === cluster.request_type
-                      )
-                      if (sameTrackOthers.length === 0) {
-                        return (
-                          <span className="text-xs text-bakfg/40">
-                            אין עוד מוצר באותו סוג בקשה למיזוג
-                          </span>
-                        )
+                      const others = clusters.filter((c) => c.id !== cluster.id)
+                      if (others.length === 0) {
+                        return <span className="text-xs text-bakfg/40">אין עוד מוצרים למיזוג</span>
                       }
                       return (
                         <div className="flex items-center gap-2">
@@ -131,13 +150,13 @@ export default function ClustersManager() {
                             className="rounded border border-black/10 px-2 py-1"
                           >
                             <option value="">בחר יעד...</option>
-                            {sameTrackOthers.map((c) => (
+                            {others.map((c) => (
                               <option key={c.id} value={c.id}>
-                                {c.canonical_name}
+                                {c.canonical_name} ({c.request_type === 'return' ? 'חזרה' : 'חדש'})
                               </option>
                             ))}
                           </select>
-                          <button onClick={() => askMerge(cluster.id)} className="text-sm text-red-600">
+                          <button onClick={() => askMerge(cluster)} className="text-sm text-red-600">
                             מזג
                           </button>
                         </div>
