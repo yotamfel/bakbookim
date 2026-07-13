@@ -44,21 +44,21 @@ export default function ClusterListPage({ requestType, title }) {
         </Link>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 rounded-3xl bg-gradient-to-b from-navy to-brand-dark p-4 shadow-lg sm:p-6">
         <FilterBar sort={sort} setSort={setSort} category={category} setCategory={setCategory} range={range} setRange={setRange} />
-      </div>
 
-      <div className="mt-4 space-y-3">
-        {loading && <p className="px-1 text-bakfg/60">טוען...</p>}
-        {error && <p className="px-1 text-red-600">{error}</p>}
-        {!loading && !error && items.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 p-6 text-center text-bakfg/60">
-            אין עדיין בקשות בטווח/סינון הנבחר.
-          </div>
-        )}
-        {items.map((cluster) => (
-          <ClusterCard key={cluster.cluster_id} cluster={cluster} requestType={requestType} />
-        ))}
+        <div className="mt-4 space-y-3">
+          {loading && <p className="px-1 text-white/60">טוען...</p>}
+          {error && <p className="px-1 text-red-300">{error}</p>}
+          {!loading && !error && items.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center text-white/60">
+              אין עדיין בקשות בטווח/סינון הנבחר.
+            </div>
+          )}
+          {items.map((cluster) => (
+            <ClusterCard key={cluster.cluster_id} cluster={cluster} requestType={requestType} />
+          ))}
+        </div>
       </div>
     </div>
   )

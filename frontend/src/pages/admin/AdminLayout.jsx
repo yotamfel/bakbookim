@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 export default function AdminLayout() {
   const navigate = useNavigate()
@@ -17,13 +17,18 @@ export default function AdminLayout() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="flex items-center justify-between border-b border-black/10 pb-3">
-        <div className="flex gap-2">
-          <NavLink to="/admin/requests" className={linkClass}>
-            בקשות
-          </NavLink>
-          <NavLink to="/admin/clusters" className={linkClass}>
-            קלאסטרים
-          </NavLink>
+        <div className="flex items-center gap-4">
+          <Link to="/return" className="text-sm text-brand hover:underline">
+            חזרה לאתר
+          </Link>
+          <div className="flex gap-2">
+            <NavLink to="/admin/requests" className={linkClass}>
+              בקשות
+            </NavLink>
+            <NavLink to="/admin/clusters" className={linkClass}>
+              קלאסטרים
+            </NavLink>
+          </div>
         </div>
         <button onClick={logout} className="text-sm text-bakfg/60 underline">
           התנתקות
