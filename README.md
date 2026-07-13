@@ -5,6 +5,11 @@
 - מפרט מלא: [`SPEC.md`](./SPEC.md)
 - הקמה/פריסה: [`SETUP_GUIDE.md`](./SETUP_GUIDE.md)
 
+## חי
+
+- אתר: https://bakbookim.vercel.app
+- API: https://backend-production-c02f.up.railway.app/docs
+
 ## מבנה
 
 - `backend/` — FastAPI + SQLAlchemy + Neon (Postgres/pgvector)
