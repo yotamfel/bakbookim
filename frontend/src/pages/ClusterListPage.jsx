@@ -44,7 +44,7 @@ export default function ClusterListPage({ requestType, title }) {
         </Link>
       </div>
 
-      <div className="mt-4 rounded-3xl bg-gradient-to-b from-navy to-brand-dark p-4 shadow-lg sm:p-6">
+      <div className="mt-4 rounded-3xl bg-gradient-to-b from-brand-dark to-brand p-4 shadow-lg sm:p-6">
         <FilterBar sort={sort} setSort={setSort} category={category} setCategory={setCategory} range={range} setRange={setRange} />
 
         <div className="mt-4 space-y-3">
