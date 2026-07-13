@@ -26,7 +26,7 @@ export default function AdminLayout() {
               בקשות
             </NavLink>
             <NavLink to="/admin/clusters" className={linkClass}>
-              קלאסטרים
+              מוצרים
             </NavLink>
           </div>
         </div>

@@ -1,11 +1,12 @@
 """
 Two-stage clustering (SPEC.md section 5):
-  1. Bucket by near-exact match on normalized fields (category + canonical_brand), partitioned by
-     request_type — clusters from `return` and `new` never mix even for identical text.
-  2. Within that bucket, use embedding cosine similarity to confirm the closest existing variant,
-     or decide the variant is different enough that a new cluster is warranted.
-If no same-brand bucket exists (or the request has no extracted brand), fall back to a stricter
-global embedding search within the category, to tolerate any brand-normalization drift from Claude.
+  1. Bucket by near-exact match on normalized fields (category + canonical_brand + canonical_variant),
+     partitioned by request_type — clusters from `return` and `new` never mix even for identical text.
+  2. Embedding cosine similarity is only used as a fallback when the brand itself isn't recognized
+     (e.g. Claude normalized the brand string slightly differently across submissions) — it is
+     deliberately NOT used to bridge a *different* variant of a known brand (e.g. "Macallan 18" vs
+     "Macallan 15"), because those differ by a single token and embed as highly similar even though
+     they're different products. Variant equality (not embedding distance) is what decides that.
 """
 
 from datetime import date as date_type
@@ -18,7 +19,6 @@ from app.models import Cluster, ClusterDailyCount, Request, RequestType
 
 settings = get_settings()
 
-BRAND_MATCH_SIMILARITY = settings.cluster_similarity_threshold
 NO_BRAND_MATCH_SIMILARITY = 0.93
 
 
@@ -40,25 +40,34 @@ def find_matching_cluster(
     embedding: list[float],
 ) -> Cluster | None:
     norm_brand = _norm(canonical_brand)
+    norm_variant = _norm(canonical_variant)
 
     if norm_brand:
-        row = db.execute(
-            select(Cluster, Cluster.centroid_embedding.cosine_distance(embedding).label("distance"))
+        exact = db.execute(
+            select(Cluster).where(
+                Cluster.request_type == request_type,
+                Cluster.category == category,
+                func.lower(func.trim(Cluster.canonical_brand)) == norm_brand,
+                func.lower(func.trim(func.coalesce(Cluster.canonical_variant, ""))) == norm_variant,
+            )
+        ).scalar_one_or_none()
+        if exact is not None:
+            return exact
+
+        same_brand_exists = db.execute(
+            select(Cluster.id)
             .where(
                 Cluster.request_type == request_type,
                 Cluster.category == category,
                 func.lower(func.trim(Cluster.canonical_brand)) == norm_brand,
             )
-            .order_by("distance")
             .limit(1)
         ).first()
-        if row is not None:
-            cluster, distance = row
-            if (1 - distance) >= BRAND_MATCH_SIMILARITY:
-                return cluster
-            return None  # same brand exists, but this variant is different enough -> new cluster
+        if same_brand_exists is not None:
+            return None  # known brand, but a different variant -> a genuinely different product
 
-    # No same-brand bucket (or no brand extracted) -> stricter global fallback within the category.
+    # No same-brand bucket (or no brand extracted) -> stricter global fallback within the category,
+    # to tolerate brand-normalization drift rather than variant differences.
     row = db.execute(
         select(Cluster, Cluster.centroid_embedding.cosine_distance(embedding).label("distance"))
         .where(Cluster.request_type == request_type, Cluster.category == category)

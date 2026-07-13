@@ -20,6 +20,7 @@ class RequestType(str, enum.Enum):
 
 class ClusterStatus(str, enum.Enum):
     active = "active"
+    coming_soon = "coming_soon"
     fulfilled = "fulfilled"
 
 

@@ -121,7 +121,7 @@ def join_existing(
 
     cluster = db.get(Cluster, cluster_id)
     if cluster is None:
-        raise HTTPException(status_code=404, detail="הקלאסטר לא נמצא")
+        raise HTTPException(status_code=404, detail="המוצר לא נמצא")
 
     # No normalization/embedding pass — the cluster is already known (SPEC.md section 7).
     clustering.join_cluster(db, cluster, cluster.centroid_embedding, payload.submitter_phone, payload.submitter_name)

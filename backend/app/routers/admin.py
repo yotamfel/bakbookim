@@ -111,7 +111,7 @@ def update_cluster(
 ) -> AdminClusterOut:
     cluster = db.get(Cluster, cluster_id)
     if cluster is None:
-        raise HTTPException(status_code=404, detail="קלאסטר לא נמצא")
+        raise HTTPException(status_code=404, detail="מוצר לא נמצא")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(cluster, field, value)
     db.commit()
@@ -130,11 +130,11 @@ def merge_clusters(
     source = db.get(Cluster, payload.source_cluster_id)
     target = db.get(Cluster, payload.target_cluster_id)
     if source is None or target is None:
-        raise HTTPException(status_code=404, detail="קלאסטר לא נמצא")
+        raise HTTPException(status_code=404, detail="מוצר לא נמצא")
     if source.id == target.id:
-        raise HTTPException(status_code=400, detail="לא ניתן למזג קלאסטר לתוך עצמו")
+        raise HTTPException(status_code=400, detail="לא ניתן למזג מוצר לתוך עצמו")
     if source.request_type != target.request_type:
-        raise HTTPException(status_code=400, detail="לא ניתן למזג קלאסטרים ממסלולים שונים (חזרה/חדש)")
+        raise HTTPException(status_code=400, detail="לא ניתן למזג מוצרים ממסלולים שונים (חזרה/חדש)")
 
     db.execute(
         RequestModel.__table__.update().where(RequestModel.cluster_id == source.id).values(cluster_id=target.id)

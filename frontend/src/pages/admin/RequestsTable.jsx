@@ -77,8 +77,8 @@ export default function RequestsTable() {
                 <Th>טקסט מקורי</Th>
                 <Th>שם</Th>
                 <Th>טלפון</Th>
-                <Th>מסלול</Th>
-                <Th>סטטוס</Th>
+                <Th title="חזרה = מוצר שהיה בעבר בפרויקט. חדש = מוצר שמעולם לא הוצע">סוג בקשה</Th>
+                <Th title="הסטטוס של המוצר (לא של הבקשה הבודדת): פעיל / בקרוב / סופק">סטטוס המוצר</Th>
                 <Th>פעולות</Th>
               </tr>
             </thead>
@@ -123,7 +123,9 @@ export default function RequestsTable() {
                       )}
                     </Td>
                     <Td>{row.request_type === 'return' ? 'חזרה' : 'חדש'}</Td>
-                    <Td>{row.status === 'fulfilled' ? '✅ סופק' : 'פעיל'}</Td>
+                    <Td>
+                      {row.status === 'fulfilled' ? '✅ סופק' : row.status === 'coming_soon' ? '🔜 בקרוב' : 'פעיל'}
+                    </Td>
                     <Td>
                       {isEditing ? (
                         <div className="flex gap-2">
@@ -156,8 +158,12 @@ export default function RequestsTable() {
   )
 }
 
-function Th({ children }) {
-  return <th className="whitespace-nowrap px-3 py-2 text-right font-medium">{children}</th>
+function Th({ children, title }) {
+  return (
+    <th className="whitespace-nowrap px-3 py-2 text-right font-medium" title={title}>
+      {children}
+    </th>
+  )
 }
 function Td({ children, wrap = false }) {
   return <td className={`px-3 py-2 ${wrap ? 'max-w-xs' : 'whitespace-nowrap'}`}>{children}</td>

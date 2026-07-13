@@ -52,7 +52,7 @@ def get_cluster_reasons(
 ) -> ClusterReasonsOut:
     cluster = db.get(Cluster, cluster_id)
     if cluster is None:
-        raise HTTPException(status_code=404, detail="קלאסטר לא נמצא")
+        raise HTTPException(status_code=404, detail="מוצר לא נמצא")
 
     reasons = (
         db.execute(
