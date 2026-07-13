@@ -56,7 +56,7 @@ export default function ClusterListPage({ requestType, title }) {
             </div>
           )}
           {items.map((cluster) => (
-            <ClusterCard key={cluster.cluster_id} cluster={cluster} requestType={requestType} />
+            <ClusterCard key={cluster.cluster_id} cluster={cluster} />
           ))}
         </div>
       </div>

@@ -85,7 +85,7 @@ class Request(Base):
     canonical_brand: Mapped[str | None] = mapped_column(Text, nullable=True)
     canonical_variant: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    reason: Mapped[str | None] = mapped_column(Text, nullable=True)  # only meaningful for request_type = new
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     submitter_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     submitter_phone: Mapped[str | None] = mapped_column(Text, nullable=True)

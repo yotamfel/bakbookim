@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../lib/api'
 import JoinExistingModal from './JoinExistingModal'
 
-export default function ClusterCard({ cluster, requestType, onJoined }) {
+export default function ClusterCard({ cluster, onJoined }) {
   const [showJoin, setShowJoin] = useState(false)
   const [showReasons, setShowReasons] = useState(false)
   const [reasons, setReasons] = useState(null)
@@ -58,14 +58,12 @@ export default function ClusterCard({ cluster, requestType, onJoined }) {
         >
           גם אני רוצה את זה 🙋
         </button>
-        {requestType === 'new' && (
-          <button
-            onClick={toggleReasons}
-            className="rounded-full border border-black/10 px-4 py-1.5 text-sm text-bakfg/80 transition-colors hover:bg-bakbg-soft"
-          >
-            למה מבקשים את זה? 💬
-          </button>
-        )}
+        <button
+          onClick={toggleReasons}
+          className="rounded-full border border-black/10 px-4 py-1.5 text-sm text-bakfg/80 transition-colors hover:bg-bakbg-soft"
+        >
+          למה מבקשים את זה? 💬
+        </button>
       </div>
 
       {showReasons && (

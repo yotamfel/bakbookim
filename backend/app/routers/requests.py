@@ -84,7 +84,7 @@ def submit_requests(
             original_text=item.original_text,
             canonical_brand=canonical_brand or None,
             canonical_variant=canonical_variant or None,
-            reason=item.reason if effective_type == RequestType.new else None,
+            reason=item.reason,
             submitter_name=payload.submitter_name,
             submitter_phone=payload.submitter_phone,
             is_joined_existing=False,

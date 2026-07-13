@@ -43,7 +43,7 @@ export default function RequestForm() {
         items: items.map((it) => ({
           category: it.category,
           original_text: it.original_text,
-          reason: isNew ? it.reason || null : null,
+          reason: it.reason || null,
         })),
       }
       const result = await api.submitRequests(payload)
@@ -165,18 +165,18 @@ export default function RequestForm() {
             className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           />
 
-          {isNew && (
-            <>
-              <label className="mt-3 block text-sm text-bakfg/70">למה אתם רוצים את המוצר הזה? (אופציונלי)</label>
-              <textarea
-                value={item.reason}
-                onChange={(e) => updateItem(index, 'reason', e.target.value)}
-                placeholder="נשמח שתכתבו למה אתם רוצים את המוצר הזה — זה עוזר לשאר חברי הקהילה להכיר מוצרים חדשים 😊"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
-                rows={3}
-              />
-            </>
-          )}
+          <label className="mt-3 block text-sm text-bakfg/70">למה אתם רוצים את המוצר הזה? (אופציונלי)</label>
+          <textarea
+            value={item.reason}
+            onChange={(e) => updateItem(index, 'reason', e.target.value)}
+            placeholder={
+              isNew
+                ? 'נשמח שתכתבו למה אתם רוצים את המוצר הזה — זה עוזר לשאר חברי הקהילה להכיר מוצרים חדשים 😊'
+                : 'נשמח שתכתבו למה אתם רוצים שהמוצר הזה יחזור — זה עוזר לשאר חברי הקהילה 😊'
+            }
+            className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+            rows={3}
+          />
         </div>
       ))}
 

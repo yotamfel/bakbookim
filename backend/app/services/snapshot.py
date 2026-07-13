@@ -119,7 +119,7 @@ def _summarize_reasons(product_name: str, reasons: list[str]) -> str:
 def refresh_ai_summaries(db: Session, cluster_ids: set[uuid.UUID]) -> None:
     for cluster_id in cluster_ids:
         cluster = db.get(Cluster, cluster_id)
-        if cluster is None or cluster.request_type != RequestType.new:
+        if cluster is None:
             continue
         reasons = (
             db.execute(
