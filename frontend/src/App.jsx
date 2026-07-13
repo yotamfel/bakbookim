@@ -19,10 +19,10 @@ function PublicHeader() {
         <span className="font-heading text-xl font-bold text-white">bakbookim — בקשות קהילה</span>
         <nav className="flex gap-2">
           <NavLink to="/return" className={linkClass}>
-            בקשות לחזרה
+            התגעגענו אליהם
           </NavLink>
           <NavLink to="/new" className={linkClass}>
-            בקשות חדשות
+            בא לנו לנסות
           </NavLink>
         </nav>
       </div>

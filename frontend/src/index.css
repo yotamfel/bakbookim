@@ -24,10 +24,11 @@ body {
   margin: 0;
   color: var(--color-bakfg);
   font-family: var(--font-sans);
-  background-color: var(--color-bakbg);
+  background-color: #efeafb;
   background-image:
-    radial-gradient(1100px 550px at 100% -8%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 60%),
-    radial-gradient(900px 480px at 0% -4%, color-mix(in srgb, var(--color-brand) 16%, transparent), transparent 62%);
+    radial-gradient(1400px 750px at 100% -12%, color-mix(in srgb, var(--color-accent) 48%, transparent), transparent 62%),
+    radial-gradient(1200px 700px at -8% -8%, color-mix(in srgb, var(--color-brand) 42%, transparent), transparent 64%),
+    radial-gradient(1100px 900px at 50% 115%, color-mix(in srgb, var(--color-navy) 16%, transparent), transparent 68%);
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
