@@ -59,6 +59,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/return" replace />} />
               <Route path="/return" element={<ReturnList />} />
               <Route path="/new" element={<NewList />} />
+              <Route path="/request" element={<RequestForm />} />
               <Route path="/request/:requestType" element={<RequestForm />} />
             </Routes>
             <PublicFooter />

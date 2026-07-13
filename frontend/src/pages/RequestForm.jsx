@@ -6,9 +6,11 @@ import { api } from '../lib/api'
 const emptyItem = () => ({ category: CATEGORIES[0], original_text: '', reason: '' })
 
 export default function RequestForm() {
-  const { requestType } = useParams() // 'return' | 'new'
+  const { requestType: paramType } = useParams() // optional pre-selection: 'return' | 'new'
   const navigate = useNavigate()
-  const isNew = requestType === 'new'
+
+  const [selectedType, setSelectedType] = useState(paramType || null)
+  const isNew = selectedType === 'new'
 
   const [items, setItems] = useState([emptyItem()])
   const [name, setName] = useState('')
@@ -35,7 +37,7 @@ export default function RequestForm() {
     setError(null)
     try {
       const payload = {
-        request_type: requestType,
+        request_type: selectedType,
         submitter_name: name || null,
         submitter_phone: phone || null,
         items: items.map((it) => ({
@@ -53,7 +55,44 @@ export default function RequestForm() {
     }
   }
 
+  // Step 1: which track is this request for? (SPEC.md section 2 — the two tracks never mix,
+  // but there's a single entry point and the split happens right here, inside the form.)
+  if (!selectedType) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-10">
+        <h1 className="text-center font-heading text-2xl font-bold text-bakfg">על איזה מוצר מדובר?</h1>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setSelectedType('return')}
+            className="rounded-2xl border border-black/5 bg-white/90 p-6 text-center shadow-sm backdrop-blur-sm transition-shadow hover:shadow-lg"
+          >
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-2xl">
+              🍾
+            </div>
+            <h2 className="font-heading text-lg font-bold text-bakfg">בקשה למוצר שהיה</h2>
+            <p className="mt-1 text-sm text-bakfg/60">מוצר שכבר היה בפרויקט בעבר ואתם רוצים שיחזור</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedType('new')}
+            className="rounded-2xl border border-black/5 bg-white/90 p-6 text-center shadow-sm backdrop-blur-sm transition-shadow hover:shadow-lg"
+          >
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-2xl">
+              ✨
+            </div>
+            <h2 className="font-heading text-lg font-bold text-bakfg">בקשה למוצר חדש</h2>
+            <p className="mt-1 text-sm text-bakfg/60">מוצר שמעולם לא הוצע בפרויקט</p>
+          </button>
+        </div>
+        <p className="mt-4 text-center text-xs text-bakfg/40">לא בטוחים? אין בעיה — אם המוצר כבר היה, נשים לב לזה בשבילכם.</p>
+      </div>
+    )
+  }
+
   if (done) {
+    const redirectedItems = done.results.filter((r) => r.redirected_to_return)
     return (
       <div className="mx-auto max-w-xl px-4 py-10 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-3xl">
@@ -61,6 +100,20 @@ export default function RequestForm() {
         </div>
         <h1 className="font-heading text-2xl font-bold text-bakfg">תודה! הבקשה נקלטה</h1>
         <p className="mt-2 text-bakfg/70">היא כבר שויכה לרשימה הציבורית המתאימה.</p>
+
+        {redirectedItems.length > 0 && (
+          <div className="mt-4 rounded-xl bg-bakbg-soft p-4 text-sm text-bakfg/80">
+            שמנו לב ש
+            {redirectedItems.map((r, i) => (
+              <span key={r.request_id} className="font-medium text-brand">
+                {i > 0 && ', '}
+                {r.canonical_name}
+              </span>
+            ))}{' '}
+            כבר היו בפרויקט בעבר — הוספנו את הבקשה שלכם לרשימת &quot;התגעגענו אליהם&quot; במקום.
+          </div>
+        )}
+
         <button
           onClick={() => navigate(isNew ? '/new' : '/return')}
           className="mt-6 rounded-full bg-brand px-5 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
@@ -74,7 +127,7 @@ export default function RequestForm() {
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-xl px-4 py-6">
       <h1 className="font-heading text-2xl font-bold text-bakfg">
-        {isNew ? 'בקשה למוצר חדש' : 'בקשה להחזרת מוצר'}
+        {isNew ? 'בקשה למוצר חדש' : 'בקשה למוצר שהיה'}
       </h1>
 
       {items.map((item, index) => (

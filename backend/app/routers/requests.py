@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Cluster
 from app.models import Request as RequestModel
+from app.models import RequestType
 from app.rate_limit import enforce_rate_limit, get_client_ip, hash_ip
 from app.schemas import (
     JoinExistingIn,
@@ -42,31 +43,48 @@ def submit_requests(
         embedding_input = " ".join(p for p in [category, canonical_brand, canonical_variant] if p)
         embedding = embed_text(embedding_input)
 
-        cluster = clustering.find_matching_cluster(
-            db, payload.request_type, category, canonical_brand, canonical_variant, embedding
-        )
-        is_new_cluster = cluster is None
-        if cluster is None:
-            cluster = clustering.create_cluster(
-                db,
-                payload.request_type,
-                category,
-                canonical_brand,
-                canonical_variant,
-                embedding,
-                payload.submitter_phone,
-                payload.submitter_name,
+        # People often don't realize a product they're asking for already existed in the
+        # project before. If this is a "new" submission but it actually matches something on
+        # the "return" track, redirect it there instead of creating a confusing duplicate.
+        redirected_to_return = False
+        effective_type = payload.request_type
+        if payload.request_type == RequestType.new:
+            cross_match = clustering.find_matching_cluster(
+                db, RequestType.return_, category, canonical_brand, canonical_variant, embedding
             )
-        else:
-            clustering.join_cluster(db, cluster, embedding, payload.submitter_phone, payload.submitter_name)
+            if cross_match is not None:
+                cluster = cross_match
+                effective_type = RequestType.return_
+                redirected_to_return = True
+                clustering.join_cluster(db, cluster, embedding, payload.submitter_phone, payload.submitter_name)
+                is_new_cluster = False
+
+        if not redirected_to_return:
+            cluster = clustering.find_matching_cluster(
+                db, payload.request_type, category, canonical_brand, canonical_variant, embedding
+            )
+            is_new_cluster = cluster is None
+            if cluster is None:
+                cluster = clustering.create_cluster(
+                    db,
+                    payload.request_type,
+                    category,
+                    canonical_brand,
+                    canonical_variant,
+                    embedding,
+                    payload.submitter_phone,
+                    payload.submitter_name,
+                )
+            else:
+                clustering.join_cluster(db, cluster, embedding, payload.submitter_phone, payload.submitter_name)
 
         request_row = RequestModel(
-            request_type=payload.request_type,
+            request_type=effective_type,
             category=category,
             original_text=item.original_text,
             canonical_brand=canonical_brand or None,
             canonical_variant=canonical_variant or None,
-            reason=item.reason if payload.request_type.value == "new" else None,
+            reason=item.reason if effective_type == RequestType.new else None,
             submitter_name=payload.submitter_name,
             submitter_phone=payload.submitter_phone,
             is_joined_existing=False,
@@ -83,6 +101,7 @@ def submit_requests(
                 cluster_id=cluster.id,
                 canonical_name=cluster.canonical_name,
                 is_new_cluster=is_new_cluster,
+                redirected_to_return=redirected_to_return,
             )
         )
 

@@ -37,7 +37,7 @@ export default function ClusterListPage({ requestType, title }) {
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-heading text-2xl font-bold text-bakfg">{title}</h1>
         <Link
-          to={`/request/${requestType}`}
+          to="/request"
           className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           שליחת בקשה

@@ -31,6 +31,7 @@ class RequestResultOut(BaseModel):
     cluster_id: uuid.UUID
     canonical_name: str
     is_new_cluster: bool
+    redirected_to_return: bool = False
 
 
 class RequestSubmissionOut(BaseModel):
