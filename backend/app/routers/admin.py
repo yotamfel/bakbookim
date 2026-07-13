@@ -91,8 +91,20 @@ def update_request(
     req = db.get(RequestModel, request_id)
     if req is None:
         raise HTTPException(status_code=404, detail="בקשה לא נמצאה")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+
+    updates = payload.model_dump(exclude_unset=True)
+    previous_cluster_id = req.cluster_id
+    for field, value in updates.items():
         setattr(req, field, value)
+    db.flush()
+
+    # Manual "split" (SPEC.md section 10.2) moves a request to a different/new cluster_id — the
+    # product it left behind may now be empty and should disappear; the one it joined needs its
+    # counters recomputed too.
+    if "cluster_id" in updates and updates["cluster_id"] != previous_cluster_id:
+        _recompute_cluster_counters(db, previous_cluster_id)
+        _recompute_cluster_counters(db, req.cluster_id)
+
     db.commit()
     db.refresh(req)
 
