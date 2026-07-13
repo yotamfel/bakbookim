@@ -24,7 +24,7 @@ export const RANGE_OPTIONS = [
 
 export const SORT_OPTIONS = [
   { value: 'top', label: 'הכי מבוקש' },
-  { value: 'unique', label: 'משתמשים ייחודיים' },
+  { value: 'unique', label: 'הכי הרבה מבקשים' },
   { value: 'trending', label: 'טרנדינג' },
   { value: 'newest', label: 'חדש לגמרי' },
 ]

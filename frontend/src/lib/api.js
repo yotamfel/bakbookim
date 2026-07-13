@@ -40,6 +40,10 @@ export const api = {
   adminUpdateRequest: (id, payload) =>
     request(`/admin/requests/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   adminDeleteRequest: (id) => request(`/admin/requests/${id}`, { method: 'DELETE' }),
+  adminBulkDeleteRequests: (params) => {
+    const qs = new URLSearchParams(params).toString()
+    return request(`/admin/requests/bulk?${qs}`, { method: 'DELETE' })
+  },
   adminListClusters: () => request('/admin/clusters'),
   adminUpdateCluster: (id, payload) =>
     request(`/admin/clusters/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),

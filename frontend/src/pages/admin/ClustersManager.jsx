@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ConfirmDialog from '../../components/ConfirmDialog'
 import { api } from '../../lib/api'
 
 export default function ClustersManager() {
@@ -6,6 +7,8 @@ export default function ClustersManager() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [mergeTarget, setMergeTarget] = useState({})
+  const [noteDraft, setNoteDraft] = useState({})
+  const [confirmState, setConfirmState] = useState(null) // { message, action }
 
   function load() {
     setLoading(true)
@@ -18,17 +21,43 @@ export default function ClustersManager() {
 
   useEffect(load, [])
 
-  async function setStatus(cluster, status) {
-    const updated = await api.adminUpdateCluster(cluster.id, { status })
+  async function saveNote(cluster) {
+    const status_note = (noteDraft[cluster.id] ?? cluster.status_note ?? '').trim() || null
+    const updated = await api.adminUpdateCluster(cluster.id, { status_note })
     setClusters((prev) => prev.map((c) => (c.id === cluster.id ? updated : c)))
+    setNoteDraft((d) => {
+      const next = { ...d }
+      delete next[cluster.id]
+      return next
+    })
   }
 
-  async function handleMerge(sourceId) {
+  function askMerge(sourceId) {
     const targetId = mergeTarget[sourceId]
     if (!targetId) return
-    if (!confirm('למזג את המוצר הזה לתוך היעד שנבחר? הפעולה בלתי הפיכה.')) return
-    await api.adminMergeClusters(sourceId, targetId)
-    load()
+    setConfirmState({
+      message: 'למזג את המוצר הזה לתוך היעד שנבחר? הפעולה בלתי הפיכה.',
+      action: async () => {
+        await api.adminMergeClusters(sourceId, targetId)
+        load()
+      },
+    })
+  }
+
+  function askDeleteAllForProduct(cluster) {
+    setConfirmState({
+      message: `למחוק את כל הבקשות של המוצר "${cluster.canonical_name}"? הפעולה בלתי הפיכה.`,
+      action: async () => {
+        await api.adminBulkDeleteRequests({ cluster_id: cluster.id })
+        load()
+      },
+    })
+  }
+
+  async function runConfirmed() {
+    const action = confirmState?.action
+    setConfirmState(null)
+    if (action) await action()
   }
 
   return (
@@ -38,20 +67,25 @@ export default function ClustersManager() {
 
       {!loading && !error && (
         <div className="overflow-x-auto rounded-xl border border-black/10 bg-white">
-          <table className="w-full min-w-[900px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-bakbg-soft text-bakfg/70">
               <tr>
                 <Th>שם מוצר</Th>
                 <Th>קטגוריה</Th>
-                <Th title="חזרה = מוצר שהיה בעבר בפרויקט. חדש = מוצר שמעולם לא הוצע">סוג בקשה</Th>
+                <Th title="חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע">
+                  סוג בקשה
+                </Th>
                 <Th title="כמה בקשות הוגשו למוצר הזה בסך הכל (כולל אם אותו אדם ביקש כמה פעמים)">
                   סה&quot;כ בקשות
                 </Th>
                 <Th title="כמה אנשים שונים ביקשו את המוצר הזה (לא סופר בקשות כפולות מאותו אדם)">
                   לקוחות ייחודיים
                 </Th>
-                <Th title="פעיל / בקרוב (בדרך לפרויקט) / סופק (כבר הגיע)">סטטוס</Th>
+                <Th title='טקסט חופשי שיוצג ברשימה הציבורית ליד המוצר, למשל "בקרוב" או "סופק בפרויקט קיץ 2026". ריק = לא מוצג כלום'>
+                  הודעה לציבור
+                </Th>
                 <Th>מיזוג לתוך מוצר אחר</Th>
+                <Th>פעולות</Th>
               </tr>
             </thead>
             <tbody>
@@ -62,16 +96,18 @@ export default function ClustersManager() {
                   <Td>{cluster.request_type === 'return' ? 'חזרה' : 'חדש'}</Td>
                   <Td>{cluster.total_requests}</Td>
                   <Td>{cluster.unique_submitters}</Td>
-                  <Td>
-                    <select
-                      value={cluster.status}
-                      onChange={(e) => setStatus(cluster, e.target.value)}
-                      className="rounded border border-black/10 px-2 py-1"
-                    >
-                      <option value="active">פעיל</option>
-                      <option value="coming_soon">🔜 בקרוב</option>
-                      <option value="fulfilled">✅ סופק</option>
-                    </select>
+                  <Td wrap>
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={noteDraft[cluster.id] ?? cluster.status_note ?? ''}
+                        onChange={(e) => setNoteDraft((d) => ({ ...d, [cluster.id]: e.target.value }))}
+                        placeholder="בקרוב / סופק בפרויקט..."
+                        className="w-full min-w-[160px] rounded border border-black/10 px-2 py-1"
+                      />
+                      <button onClick={() => saveNote(cluster)} className="shrink-0 text-sm text-brand">
+                        שמור
+                      </button>
+                    </div>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-2">
@@ -89,16 +125,30 @@ export default function ClustersManager() {
                             </option>
                           ))}
                       </select>
-                      <button onClick={() => handleMerge(cluster.id)} className="text-sm text-red-600">
+                      <button onClick={() => askMerge(cluster.id)} className="text-sm text-red-600">
                         מזג
                       </button>
                     </div>
+                  </Td>
+                  <Td>
+                    <button onClick={() => askDeleteAllForProduct(cluster)} className="text-sm text-red-600">
+                      מחק את כל הבקשות
+                    </button>
                   </Td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmState && (
+        <ConfirmDialog
+          message={confirmState.message}
+          confirmLabel="אישור"
+          onConfirm={runConfirmed}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )

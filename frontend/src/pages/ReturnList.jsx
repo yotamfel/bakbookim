@@ -5,7 +5,7 @@ export default function ReturnList() {
     <ClusterListPage
       requestType="return"
       title="מוצרים שהתגעגענו אליהם"
-      subtitle="מוצרים שכבר היו בפרויקט בעבר ואתם רוצים שיחזרו"
+      subtitle="מוצרים שכבר היו בפרויקטים של הקהילה בעבר ואתם רוצים שיחזרו"
     />
   )
 }

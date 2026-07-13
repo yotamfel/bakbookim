@@ -2,6 +2,10 @@ import ClusterListPage from './ClusterListPage'
 
 export default function NewList() {
   return (
-    <ClusterListPage requestType="new" title="מוצרים שבא לנו לנסות" subtitle="מוצרים שמעולם לא הוצעו בפרויקט" />
+    <ClusterListPage
+      requestType="new"
+      title="מוצרים שבא לנו לנסות"
+      subtitle="מוצרים שמעולם לא הוצעו בפרויקטים של הקהילה"
+    />
   )
 }

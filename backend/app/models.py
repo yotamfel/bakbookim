@@ -18,12 +18,6 @@ class RequestType(str, enum.Enum):
     new = "new"
 
 
-class ClusterStatus(str, enum.Enum):
-    active = "active"
-    coming_soon = "coming_soon"
-    fulfilled = "fulfilled"
-
-
 class RangeType(str, enum.Enum):
     week = "week"
     month = "month"
@@ -52,9 +46,10 @@ class Cluster(Base):
     canonical_variant: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     canonical_name: Mapped[str] = mapped_column(Text, nullable=False)
-    status: Mapped[ClusterStatus] = mapped_column(
-        pg_enum(ClusterStatus, "cluster_status"), nullable=False, default=ClusterStatus.active
-    )
+    # Free-text admin note (e.g. "בקרוב", "סופק בפרויקט קיץ 2026") shown on the public card only
+    # when set; empty/null means no badge at all. Deliberately not a fixed enum — the admin may
+    # not literally source every requested product, so there's no single "default" state to model.
+    status_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_summary_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     total_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

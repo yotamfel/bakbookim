@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ConfirmDialog from '../../components/ConfirmDialog'
 import { api } from '../../lib/api'
 
 export default function RequestsTable() {
@@ -8,6 +9,7 @@ export default function RequestsTable() {
   const [error, setError] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editDraft, setEditDraft] = useState({})
+  const [confirmState, setConfirmState] = useState(null) // { message, action }
 
   function load(q = search) {
     setLoading(true)
@@ -44,10 +46,44 @@ export default function RequestsTable() {
     setEditingId(null)
   }
 
-  async function handleDelete(id) {
-    if (!confirm('למחוק את הבקשה?')) return
-    await api.adminDeleteRequest(id)
-    setRows((prev) => prev.filter((r) => r.id !== id))
+  function askDelete(row) {
+    setConfirmState({
+      message: `למחוק את הבקשה "${row.original_text}"?`,
+      action: async () => {
+        await api.adminDeleteRequest(row.id)
+        setRows((prev) => prev.filter((r) => r.id !== row.id))
+      },
+    })
+  }
+
+  function askDeleteAllFromSubmitter(row) {
+    const label = row.submitter_phone || row.submitter_name
+    setConfirmState({
+      message: `למחוק את כל הבקשות של "${label}"? הפעולה בלתי הפיכה.`,
+      action: async () => {
+        const params = row.submitter_phone
+          ? { submitter_phone: row.submitter_phone }
+          : { submitter_name: row.submitter_name }
+        await api.adminBulkDeleteRequests(params)
+        load()
+      },
+    })
+  }
+
+  function askDeleteAllForProduct(row) {
+    setConfirmState({
+      message: `למחוק את כל הבקשות של המוצר "${row.canonical_name}"? הפעולה בלתי הפיכה.`,
+      action: async () => {
+        await api.adminBulkDeleteRequests({ cluster_id: row.cluster_id })
+        load()
+      },
+    })
+  }
+
+  async function runConfirmed() {
+    const action = confirmState?.action
+    setConfirmState(null)
+    if (action) await action()
   }
 
   return (
@@ -69,7 +105,7 @@ export default function RequestsTable() {
 
       {!loading && !error && (
         <div className="mt-4 overflow-x-auto rounded-xl border border-black/10 bg-white">
-          <table className="w-full min-w-[900px] text-sm">
+          <table className="w-full min-w-[1000px] text-sm">
             <thead className="bg-bakbg-soft text-bakfg/70">
               <tr>
                 <Th>תאריך</Th>
@@ -77,8 +113,9 @@ export default function RequestsTable() {
                 <Th>טקסט מקורי</Th>
                 <Th>שם</Th>
                 <Th>טלפון</Th>
-                <Th title="חזרה = מוצר שהיה בעבר בפרויקט. חדש = מוצר שמעולם לא הוצע">סוג בקשה</Th>
-                <Th title="הסטטוס של המוצר (לא של הבקשה הבודדת): פעיל / בקרוב / סופק">סטטוס המוצר</Th>
+                <Th title="חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע">
+                  סוג בקשה
+                </Th>
                 <Th>פעולות</Th>
               </tr>
             </thead>
@@ -124,9 +161,6 @@ export default function RequestsTable() {
                     </Td>
                     <Td>{row.request_type === 'return' ? 'חזרה' : 'חדש'}</Td>
                     <Td>
-                      {row.status === 'fulfilled' ? '✅ סופק' : row.status === 'coming_soon' ? '🔜 בקרוב' : 'פעיל'}
-                    </Td>
-                    <Td>
                       {isEditing ? (
                         <div className="flex gap-2">
                           <button onClick={() => saveEdit(row.id)} className="text-brand">
@@ -137,12 +171,20 @@ export default function RequestsTable() {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button onClick={() => startEdit(row)} className="text-brand">
                             עריכה
                           </button>
-                          <button onClick={() => handleDelete(row.id)} className="text-red-600">
+                          <button onClick={() => askDelete(row)} className="text-red-600">
                             מחיקה
+                          </button>
+                          {(row.submitter_phone || row.submitter_name) && (
+                            <button onClick={() => askDeleteAllFromSubmitter(row)} className="text-red-600">
+                              מחק הכל ממשתמש זה
+                            </button>
+                          )}
+                          <button onClick={() => askDeleteAllForProduct(row)} className="text-red-600">
+                            מחק הכל למוצר זה
                           </button>
                         </div>
                       )}
@@ -153,6 +195,15 @@ export default function RequestsTable() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmState && (
+        <ConfirmDialog
+          message={confirmState.message}
+          confirmLabel="מחיקה"
+          onConfirm={runConfirmed}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )

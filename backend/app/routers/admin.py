@@ -1,12 +1,13 @@
 import uuid
+from collections import Counter
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import require_admin
-from app.models import AdminUser, Cluster
+from app.models import AdminUser, Cluster, ClusterDailyCount
 from app.models import Request as RequestModel
 from app.schemas import (
     AdminClusterMergeIn,
@@ -20,6 +21,27 @@ from app.schemas import (
 from app.services.auth import create_access_token, verify_password
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _recompute_cluster_counters(db: Session, cluster_id: uuid.UUID) -> None:
+    """Keeps a cluster's counters/daily-counts consistent after its requests change outside the
+    normal submission pipeline (admin delete/bulk-delete). Deletes the cluster entirely if it
+    ends up with no requests left."""
+    remaining = db.execute(select(RequestModel).where(RequestModel.cluster_id == cluster_id)).scalars().all()
+    cluster = db.get(Cluster, cluster_id)
+    if cluster is None:
+        return
+    if not remaining:
+        db.delete(cluster)
+        return
+
+    cluster.total_requests = len(remaining)
+    identifiers = {r.submitter_phone or r.submitter_name for r in remaining if (r.submitter_phone or r.submitter_name)}
+    cluster.unique_submitters = len(identifiers)
+
+    db.execute(delete(ClusterDailyCount).where(ClusterDailyCount.cluster_id == cluster_id))
+    for day, count in Counter(r.created_at.date() for r in remaining).items():
+        db.add(ClusterDailyCount(cluster_id=cluster_id, date=day, count_that_day=count))
 
 
 @router.post("/login", response_model=AdminLoginOut)
@@ -38,9 +60,7 @@ def list_requests(
 ) -> list[AdminRequestOut]:
     # Single free-text box searching phone/name/original_text/canonical_name (SPEC.md section 10.1) —
     # ILIKE is enough at MVP scale, no need for full-text/trigram indexes yet.
-    query = select(RequestModel, Cluster.status, Cluster.canonical_name).join(
-        Cluster, RequestModel.cluster_id == Cluster.id
-    )
+    query = select(RequestModel, Cluster.canonical_name).join(Cluster, RequestModel.cluster_id == Cluster.id)
     if search:
         like = f"%{search}%"
         query = query.where(
@@ -54,9 +74,8 @@ def list_requests(
     query = query.order_by(RequestModel.created_at.desc()).limit(500)
 
     out: list[AdminRequestOut] = []
-    for req, status, canonical_name in db.execute(query).all():
+    for req, canonical_name in db.execute(query).all():
         item = AdminRequestOut.model_validate(req)
-        item.status = status
         item.canonical_name = canonical_name
         out.append(item)
     return out
@@ -79,9 +98,43 @@ def update_request(
 
     cluster = db.get(Cluster, req.cluster_id)
     out = AdminRequestOut.model_validate(req)
-    out.status = cluster.status if cluster else None
     out.canonical_name = cluster.canonical_name if cluster else None
     return out
+
+
+@router.delete("/requests/bulk")
+def bulk_delete_requests(
+    submitter_phone: str | None = None,
+    submitter_name: str | None = None,
+    cluster_id: uuid.UUID | None = None,
+    _admin: str = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Deletes every request matching the given filter(s) — e.g. everything from one submitter,
+    or every request tied to one product. At least one filter is required as a safety rail."""
+    if not submitter_phone and not submitter_name and cluster_id is None:
+        raise HTTPException(status_code=400, detail="יש לספק לפחות פילטר אחד (טלפון/שם/מוצר)")
+
+    query = select(RequestModel)
+    if submitter_phone:
+        query = query.where(RequestModel.submitter_phone == submitter_phone)
+    if submitter_name:
+        query = query.where(RequestModel.submitter_name == submitter_name)
+    if cluster_id is not None:
+        query = query.where(RequestModel.cluster_id == cluster_id)
+
+    rows = db.execute(query).scalars().all()
+    affected_cluster_ids = {r.cluster_id for r in rows}
+    deleted_count = len(rows)
+    for r in rows:
+        db.delete(r)
+    db.flush()
+
+    for cid in affected_cluster_ids:
+        _recompute_cluster_counters(db, cid)
+
+    db.commit()
+    return {"deleted": deleted_count}
 
 
 @router.delete("/requests/{request_id}")
@@ -91,7 +144,10 @@ def delete_request(
     req = db.get(RequestModel, request_id)
     if req is None:
         raise HTTPException(status_code=404, detail="בקשה לא נמצאה")
+    cluster_id = req.cluster_id
     db.delete(req)
+    db.flush()
+    _recompute_cluster_counters(db, cluster_id)
     db.commit()
     return {"ok": True}
 

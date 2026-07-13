@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models import ClusterStatus, RangeType, RequestType
+from app.models import RangeType, RequestType
 
 
 # ---------- Public: submitting requests ----------
@@ -55,7 +55,7 @@ class ClusterListItemOut(BaseModel):
     cluster_id: uuid.UUID
     canonical_name: str
     category: str
-    status: ClusterStatus
+    status_note: str | None = None
     total_requests: int
     unique_submitters: int
     first_seen_at: datetime
@@ -91,7 +91,6 @@ class AdminRequestOut(BaseModel):
     original_text: str
     submitter_name: str | None
     submitter_phone: str | None
-    status: ClusterStatus | None = None
     cluster_id: uuid.UUID
     canonical_name: str | None = None
 
@@ -111,7 +110,7 @@ class AdminClusterOut(BaseModel):
     request_type: RequestType
     category: str
     canonical_name: str
-    status: ClusterStatus
+    status_note: str | None
     total_requests: int
     unique_submitters: int
     first_seen_at: datetime
@@ -121,7 +120,7 @@ class AdminClusterOut(BaseModel):
 
 
 class AdminClusterUpdateIn(BaseModel):
-    status: ClusterStatus | None = None
+    status_note: str | None = None
     canonical_name: str | None = None
 
 

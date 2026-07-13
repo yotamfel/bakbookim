@@ -68,7 +68,7 @@ def build_snapshot(db: Session, request_type: RequestType, range_type: RangeType
                 "cluster_id": str(cluster.id),
                 "canonical_name": cluster.canonical_name,
                 "category": cluster.category,
-                "status": cluster.status.value,
+                "status_note": cluster.status_note,
                 "total_requests": windowed_total,
                 "unique_submitters": cluster.unique_submitters,
                 "first_seen_at": cluster.first_seen_at.isoformat(),

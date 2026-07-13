@@ -9,8 +9,6 @@ export default function ClusterCard({ cluster, onJoined }) {
   const [loadingReasons, setLoadingReasons] = useState(false)
   const [reasonsLimit, setReasonsLimit] = useState(5)
 
-  const isFulfilled = cluster.status === 'fulfilled'
-  const isComingSoon = cluster.status === 'coming_soon'
 
   async function toggleReasons() {
     if (showReasons) {
@@ -38,14 +36,9 @@ export default function ClusterCard({ cluster, onJoined }) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-heading text-lg font-bold text-bakfg">{cluster.canonical_name}</h3>
-            {isFulfilled && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                ✅ הגיע לפרויקט!
-              </span>
-            )}
-            {isComingSoon && (
+            {cluster.status_note && (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                🔜 בקרוב!
+                {cluster.status_note}
               </span>
             )}
           </div>
