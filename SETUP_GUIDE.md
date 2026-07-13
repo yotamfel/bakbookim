@@ -67,35 +67,33 @@ python -m jobs.daily_snapshot
 
 ---
 
-## שלב 1: GitHub
+## שלב 1: GitHub ✅ בוצע
 
-```bash
-cd /path/to/bakbookim
-git add -A
-git commit -m "Initial scaffold: backend + frontend + spec"
-gh repo create bakbookim --private --source=. --remote=origin --push
-```
-
-(אם מעדיפ/ה ציבורי — `--public` במקום `--private`.)
+Repo: https://github.com/yotamfel/bakbookim (branch `main`, פוש ראשוני בוצע).
 
 ---
 
-## שלב 2: Railway (Backend)
+## שלב 2: Railway (Backend) — בוצע ברובו אוטומטית, נשארו 2-3 קליקים
 
-1. https://railway.app → New Project → Deploy from GitHub repo → לבחור את `bakbookim`.
-2. בהגדרות ה-service: **Root Directory** = `backend`.
-3. **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. משתני סביבה (Variables) — להוסיף את כולם (כמו ב-`.env` הלוקאלי, פלוס):
-   - `DATABASE_URL` (אותו Neon connection string)
-   - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`
-   - `JWT_SECRET`, `IP_HASH_SALT`
-   - `CORS_ORIGINS` = כתובת ה-Vercel שתקבל בשלב 3 (אפשר לעדכן אחרי)
-5. אחרי הדיפלוי הראשון, להריץ פעם אחת (Railway → service → "Run a command" / shell, או לוקאלית מול אותו DATABASE_URL):
-   ```bash
-   alembic upgrade head
-   python -m jobs.seed_admin admin <סיסמה-חזקה>
-   ```
-6. **Cron Job** (ה-job היומי, SPEC.md סעיף 3): Railway → New → Cron Job (או "Add" בתוך הפרויקט) → אותו repo/root `backend` → Command: `python -m jobs.daily_snapshot` → Schedule: פעם ביום (למשל `0 3 * * *` — 3 לפנות בוקר).
+הפרויקט `bakbookim-backend` נוצר ב-Railway עם 2 services, ה-backend **חי ורץ עכשיו**:
+`https://backend-production-c02f.up.railway.app` (בדוק/י: `/health`, `/docs`).
+
+משתני הסביבה (DATABASE_URL/ANTHROPIC_API_KEY/OPENAI_API_KEY/JWT_SECRET/IP_HASH_SALT/CORS_ORIGINS)
+כבר הוגדרו בשני ה-services דרך ה-CLI. שני ה-services מחוברים ל-GitHub repo (`main` branch) להמשך.
+
+**מה נשאר לעשות ידנית (ה-CLI של Railway לא חושף את זה עדיין):**
+
+1. Root Directory: בדשבורד של Railway, לכל אחד משני ה-services (`backend` וגם `daily-snapshot-job`) →
+   Settings → Source → **Root Directory** → להקליד `backend`. בלי זה, ה-deploy הבא שיופעל
+   מ-push ל-GitHub (במקום מה-upload הידני שביצענו) עלול להיכשל כי יש גם `frontend/` באותו repo.
+2. עבור ה-service **`daily-snapshot-job`** בלבד:
+   - Settings → Deploy → **Custom Start Command** → `python -m jobs.daily_snapshot`
+   - Settings → Deploy → **Cron Schedule** → `0 3 * * *` (כל יום 3 לפנות בוקר, אפשר לשנות)
+   - (ה-Healthcheck לא רלוונטי ל-service הזה — זה batch job, לא web server)
+3. ה-admin user כבר נוצר מול אותו DB (`admin` / הסיסמה שנקבעה קודם) — לא צריך לחזור על זה.
+
+לבדיקה שה-cron מוגדר נכון: Railway → `daily-snapshot-job` → Deployments, לוודא שריצה ידנית
+("Redeploy") מסתיימת ב-SUCCESS ומדפיסה `Daily snapshot job completed.` בלוגים.
 
 ---
 
