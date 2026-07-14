@@ -12,6 +12,7 @@ export default function ClustersManager() {
   const [openReasonsFor, setOpenReasonsFor] = useState(null)
   const [reasonsByCluster, setReasonsByCluster] = useState({})
   const [reasonDraft, setReasonDraft] = useState({})
+  const [dateSort, setDateSort] = useState('desc')
 
   function load() {
     setLoading(true)
@@ -120,6 +121,11 @@ export default function ClustersManager() {
     })
   }
 
+  const sortedClusters = [...clusters].sort((a, b) => {
+    const diff = new Date(a.last_seen_at) - new Date(b.last_seen_at)
+    return dateSort === 'asc' ? diff : -diff
+  })
+
   return (
     <div>
       {loading && <p className="text-bakfg/60">טוען...</p>}
@@ -132,6 +138,15 @@ export default function ClustersManager() {
               <tr>
                 <Th>שם מוצר</Th>
                 <Th>קטגוריה</Th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                  <button
+                    onClick={() => setDateSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
+                    className="flex items-center gap-1"
+                    title="עדכון אחרון - מתי בקשה אחרונה הוגשה למוצר הזה"
+                  >
+                    עדכון אחרון {dateSort === 'desc' ? '↓' : '↑'}
+                  </button>
+                </th>
                 <Th title='חזרה = מוצר שהיה בעבר בפרויקטים של הקהילה. חדש = מוצר שמעולם לא הוצע. ניתן לשנות אם מישהו סימן בטעות'>
                   סוג בקשה
                 </Th>
@@ -151,11 +166,12 @@ export default function ClustersManager() {
               </tr>
             </thead>
             <tbody>
-              {clusters.map((cluster) => (
+              {sortedClusters.map((cluster) => (
                 <Fragment key={cluster.id}>
                 <tr className="border-t border-black/5">
                   <Td wrap>{cluster.canonical_name}</Td>
                   <Td>{cluster.category}</Td>
+                  <Td>{new Date(cluster.last_seen_at).toLocaleDateString('he-IL')}</Td>
                   <Td>
                     <select
                       value={cluster.request_type}
@@ -221,7 +237,7 @@ export default function ClustersManager() {
                 </tr>
                 {openReasonsFor === cluster.id && (
                   <tr className="border-t border-black/5 bg-bakbg-soft/50">
-                    <td colSpan={8} className="px-3 py-3">
+                    <td colSpan={9} className="px-3 py-3">
                       {!reasonsByCluster[cluster.id] && <p className="text-sm text-bakfg/60">טוען...</p>}
                       {reasonsByCluster[cluster.id]?.length === 0 && (
                         <p className="text-sm text-bakfg/50">אין סיבות למוצר הזה.</p>

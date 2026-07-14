@@ -10,6 +10,7 @@ export default function RequestsTable() {
   const [editingId, setEditingId] = useState(null)
   const [editDraft, setEditDraft] = useState({})
   const [confirmState, setConfirmState] = useState(null) // { message, action }
+  const [dateSort, setDateSort] = useState('desc')
 
   function load(q = search) {
     setLoading(true)
@@ -93,6 +94,11 @@ export default function RequestsTable() {
     if (action) await action()
   }
 
+  const sortedRows = [...rows].sort((a, b) => {
+    const diff = new Date(a.created_at) - new Date(b.created_at)
+    return dateSort === 'asc' ? diff : -diff
+  })
+
   return (
     <div>
       <form onSubmit={handleSearchSubmit} className="flex gap-2">
@@ -115,7 +121,14 @@ export default function RequestsTable() {
           <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-bakbg-soft text-bakfg/70">
               <tr>
-                <Th>תאריך</Th>
+                <th className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                  <button
+                    onClick={() => setDateSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
+                    className="flex items-center gap-1"
+                  >
+                    תאריך {dateSort === 'desc' ? '↓' : '↑'}
+                  </button>
+                </th>
                 <Th>מוצר (canonical)</Th>
                 <Th>טקסט מקורי</Th>
                 <Th title='למה המשתמש רוצה את המוצר הזה (שדה אופציונלי בטופס)'>הסבר</Th>
@@ -128,7 +141,7 @@ export default function RequestsTable() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
+              {sortedRows.map((row) => {
                 const isEditing = editingId === row.id
                 return (
                   <tr key={row.id} className="border-t border-black/5">
