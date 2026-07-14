@@ -51,6 +51,9 @@ class Cluster(Base):
     # not literally source every requested product, so there's no single "default" state to model.
     status_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_summary_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # When ai_summary_note was last (re)computed — lets the daily job skip re-summarizing clusters
+    # whose reasons haven't changed since, instead of re-running Claude on every touched cluster daily.
+    ai_summary_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     total_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     unique_submitters: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

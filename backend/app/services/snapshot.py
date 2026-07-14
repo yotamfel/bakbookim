@@ -13,6 +13,10 @@ would silently hide a genuinely trending or brand-new item that just hasn't accu
 `unique_submitters` in the ranked list is the cluster's lifetime best-effort counter (SPEC.md
 already documents unique_submitters as best-effort, since not every request includes contact
 info) rather than a windowed count — there is no per-window identity log to derive that from.
+
+`refresh_ai_summaries` re-summarizes a cluster only if it has a reason newer than
+`ai_summary_updated_at` — otherwise every cluster touched by any snapshot (up to `_STORAGE_CAP`
+per range) would call Claude daily even when nothing changed since its last summary.
 """
 
 import uuid
@@ -131,22 +135,26 @@ def refresh_ai_summaries(db: Session, cluster_ids: set[uuid.UUID]) -> None:
         cluster = db.get(Cluster, cluster_id)
         if cluster is None:
             continue
-        reasons = (
-            db.execute(
-                select(RequestModel.reason)
-                .where(
-                    RequestModel.cluster_id == cluster_id,
-                    RequestModel.reason.is_not(None),
-                    RequestModel.reason != "",
-                )
-                .order_by(RequestModel.created_at.desc())
-                .limit(20)
+
+        rows = db.execute(
+            select(RequestModel.reason, RequestModel.created_at)
+            .where(
+                RequestModel.cluster_id == cluster_id,
+                RequestModel.reason.is_not(None),
+                RequestModel.reason != "",
             )
-            .scalars()
-            .all()
-        )
-        if reasons:
-            cluster.ai_summary_note = _summarize_reasons(cluster.canonical_name, list(reasons))
+            .order_by(RequestModel.created_at.desc())
+            .limit(20)
+        ).all()
+        if not rows:
+            continue
+
+        latest_reason_at = rows[0][1]
+        if cluster.ai_summary_updated_at is not None and latest_reason_at <= cluster.ai_summary_updated_at:
+            continue  # no new reasons since the last summary — skip the Claude call
+
+        cluster.ai_summary_note = _summarize_reasons(cluster.canonical_name, [r for r, _ in rows])
+        cluster.ai_summary_updated_at = latest_reason_at
 
 
 def run_daily_job(db: Session) -> None:
