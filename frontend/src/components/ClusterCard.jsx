@@ -55,7 +55,7 @@ export default function ClusterCard({ cluster, rank, onJoined }) {
             onClick={() => setShowJoin(true)}
             className="rounded-full bg-brand px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
           >
-            🙋 גם אני
+            🙋 גם אני רוצה את זה
           </button>
           <button
             onClick={toggleReasons}
