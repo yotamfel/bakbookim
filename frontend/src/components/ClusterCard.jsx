@@ -2,13 +2,12 @@ import { useState } from 'react'
 import { api } from '../lib/api'
 import JoinExistingModal from './JoinExistingModal'
 
-export default function ClusterCard({ cluster, onJoined }) {
+export default function ClusterCard({ cluster, rank, onJoined }) {
   const [showJoin, setShowJoin] = useState(false)
   const [showReasons, setShowReasons] = useState(false)
   const [reasons, setReasons] = useState(null)
   const [loadingReasons, setLoadingReasons] = useState(false)
   const [reasonsLimit, setReasonsLimit] = useState(5)
-
 
   async function toggleReasons() {
     if (showReasons) {
@@ -31,42 +30,41 @@ export default function ClusterCard({ cluster, onJoined }) {
   }
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-white/90 p-4 shadow-sm backdrop-blur-sm transition-shadow duration-200 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-heading text-lg font-bold text-bakfg">{cluster.canonical_name}</h3>
+    <div className="rounded-xl border border-black/5 bg-white/90 px-3 py-2.5 shadow-sm backdrop-blur-sm transition-shadow duration-200 hover:shadow-md">
+      <div className="flex items-center gap-3">
+        {rank && <span className="w-5 shrink-0 text-center text-sm font-bold text-bakfg/30">{rank}</span>}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h3 className="font-heading text-base font-bold text-bakfg">{cluster.canonical_name}</h3>
+            <span className="text-xs text-bakfg/40">· {cluster.category}</span>
             {cluster.status_note && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                 {cluster.status_note}
               </span>
             )}
           </div>
-          <p className="text-sm text-bakfg/50">{cluster.category}</p>
         </div>
-        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full bg-brand/10">
-          <span className="text-lg font-bold leading-none text-brand">{cluster.total_requests}</span>
-          <span className="mt-0.5 text-[10px] text-brand/70">בקשות</span>
-        </div>
-      </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setShowJoin(true)}
-          className="rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
-        >
-          גם אני רוצה את זה 🙋
-        </button>
-        <button
-          onClick={toggleReasons}
-          className="rounded-full border border-black/10 px-4 py-1.5 text-sm text-bakfg/80 transition-colors hover:bg-bakbg-soft"
-        >
-          למה מבקשים את זה? 💬
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-sm font-bold text-brand">{cluster.total_requests}</span>
+          <button
+            onClick={() => setShowJoin(true)}
+            className="rounded-full bg-brand px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+          >
+            🙋 גם אני
+          </button>
+          <button
+            onClick={toggleReasons}
+            className="rounded-full border border-black/10 px-3 py-1 text-xs text-bakfg/70 transition-colors hover:bg-bakbg-soft"
+          >
+            💬 למה
+          </button>
+        </div>
       </div>
 
       {showReasons && (
-        <div className="mt-3 rounded-xl bg-bakbg-soft p-3 text-sm">
+        <div className="mt-2 rounded-lg bg-bakbg-soft p-2.5 text-sm">
           {loadingReasons && !reasons && <p className="text-bakfg/60">טוען...</p>}
           {reasons && (
             <>

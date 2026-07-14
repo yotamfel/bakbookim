@@ -1,8 +1,14 @@
 """
 Daily job logic (SPEC.md section 3/9): for every (request_type x range_type) combination, sums
-`cluster_daily_counts` over the range's trailing window to rank clusters, computes a trend delta
-(recent half of the window vs. the previous half), and upserts one `daily_snapshots` row. Public
-lists read only from these snapshots, never the raw tables.
+`cluster_daily_counts` over the range's trailing window, computes a trend delta (recent half of
+the window vs. the previous half), and upserts one `daily_snapshots` row. Public lists read only
+from these snapshots, never the raw tables.
+
+The stored `ranked_list` holds every cluster active in the window (up to `_STORAGE_CAP`, a safety
+ceiling well above the public top-N) rather than pre-cutting to the public top 30 by request
+volume — each sort mode (top/trending/newest) needs its own top-N slice of the *whole* active set,
+computed at request time in `routers/lists.py`, not a shared slice of "top 30 by volume" that
+would silently hide a genuinely trending or brand-new item that just hasn't accumulated raw volume.
 
 `unique_submitters` in the ranked list is the cluster's lifetime best-effort counter (SPEC.md
 already documents unique_submitters as best-effort, since not every request includes contact
@@ -32,6 +38,10 @@ _RANGE_DAYS = {
     RangeType.year: 365,
 }
 
+# Safety ceiling on how many active clusters a snapshot stores — generous relative to the public
+# top-N (settings.list_top_n) so every sort mode has the full active set to pick its own top-N from.
+_STORAGE_CAP = 300
+
 
 def build_snapshot(db: Session, request_type: RequestType, range_type: RangeType, today: date) -> list[dict]:
     window_days = _RANGE_DAYS[range_type]
@@ -55,7 +65,7 @@ def build_snapshot(db: Session, request_type: RequestType, range_type: RangeType
     if not totals:
         return []
 
-    ranked = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)[: settings.list_top_n]
+    ranked = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)[:_STORAGE_CAP]
     clusters_by_id = {c.id: c for c in db.execute(select(Cluster).where(Cluster.id.in_([cid for cid, _ in ranked]))).scalars()}
 
     ranked_list = []

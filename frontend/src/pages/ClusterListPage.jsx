@@ -50,7 +50,7 @@ export default function ClusterListPage({ requestType, title, subtitle }) {
       <div className="mt-4 rounded-3xl bg-gradient-to-b from-panel to-brand-dark p-4 shadow-lg sm:p-6">
         <FilterBar sort={sort} setSort={setSort} category={category} setCategory={setCategory} range={range} setRange={setRange} />
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-2">
           {loading && <p className="px-1 text-white/60">טוען...</p>}
           {error && <p className="px-1 text-red-300">{error}</p>}
           {!loading && !error && items.length === 0 && (
@@ -58,8 +58,8 @@ export default function ClusterListPage({ requestType, title, subtitle }) {
               אין עדיין בקשות בטווח/סינון הנבחר.
             </div>
           )}
-          {items.map((cluster) => (
-            <ClusterCard key={cluster.cluster_id} cluster={cluster} />
+          {items.map((cluster, index) => (
+            <ClusterCard key={cluster.cluster_id} cluster={cluster} rank={index + 1} />
           ))}
         </div>
       </div>

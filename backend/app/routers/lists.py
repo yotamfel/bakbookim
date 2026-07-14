@@ -4,12 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.db import get_db
 from app.models import Cluster, DailySnapshot, RangeType, RequestType
 from app.models import Request as RequestModel
 from app.schemas import ClusterListItemOut, ClusterReasonsOut
 
 router = APIRouter(tags=["lists"])
+settings = get_settings()
 
 _SORT_KEYS = {"top": "total_requests", "unique": "unique_submitters", "trending": "trend_delta"}
 
@@ -42,6 +44,11 @@ def get_list(
     else:
         key = _SORT_KEYS.get(sort, "total_requests")
         items.sort(key=lambda i: i.get(key, 0), reverse=True)
+
+    # Each sort mode picks its own top-N from the full active set stored in the snapshot, so e.g.
+    # "trending" surfaces the actually-fastest-growing items even if they're outside the top-N by
+    # raw volume, instead of just re-sorting a volume-based top-N slice.
+    items = items[: settings.list_top_n]
 
     return [ClusterListItemOut(**i) for i in items]
 
