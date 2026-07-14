@@ -47,7 +47,10 @@ export default function ClusterCard({ cluster, rank, onJoined }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-sm font-bold text-brand">{cluster.total_requests}</span>
+          <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-full bg-brand/10">
+            <span className="text-xs font-bold leading-none text-brand">{cluster.total_requests}</span>
+            <span className="mt-0.5 text-[7px] leading-none text-brand/70">בקשות</span>
+          </div>
           <button
             onClick={() => setShowJoin(true)}
             className="rounded-full bg-brand px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
