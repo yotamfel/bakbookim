@@ -16,9 +16,12 @@ def hash_ip(ip: str) -> str:
 
 
 def get_client_ip(request: FastAPIRequest) -> str:
+    # The LAST entry is the one Railway's own proxy appended — the only hop we can trust.
+    # The client controls everything else in this header (including the first entry), so
+    # reading index [0] would let anyone bypass the rate limit by sending a fake IP.
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
