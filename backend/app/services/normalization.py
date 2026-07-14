@@ -19,15 +19,25 @@ _TOOL = {
             "canonical_brand": {
                 "type": "string",
                 "description": (
-                    "The brand/product name normalized to one consistent canonical form "
-                    "(typically the transliteration/spelling as it actually appears on the bottle "
-                    "or on bakbookim.com), regardless of the language or spelling the user used. "
-                    "E.g. 'מקאלן', 'Macallan whiskey', and 'מקלאן' should all normalize to the same string."
+                    "The brand/product name normalized to one consistent canonical form, regardless of "
+                    "the language or spelling the user used. ALWAYS write it in its official Latin/English "
+                    "spelling (transliterate out of Hebrew or any other script) — e.g. 'מקאלן', "
+                    "'Macallan whiskey', and 'מקלאן' must all normalize to the exact same string 'Macallan', "
+                    "never to the Hebrew spelling, even when the input text was entirely in Hebrew. "
+                    "This is required so two requests for the same product in different languages produce "
+                    "an identical string."
                 ),
             },
             "canonical_variant": {
                 "type": "string",
-                "description": "Variant/age/flavor/vintage if one was specified in the text, else an empty string.",
+                "description": (
+                    "Variant/age/flavor/vintage if one was specified in the text, else an empty string. "
+                    "Keep ONLY the bare distinguishing token(s) — a number, a short code, or a flavor word — "
+                    "with no surrounding descriptive words or units. E.g. write '18' not '18 Year Old' or "
+                    "'18 שנה'; write '2015' not 'vintage 2015' or 'בציר 2015'; write 'XO' not 'XO Cognac'. "
+                    "This is required so the same variant expressed with different wording or in a "
+                    "different language still produces an identical string."
+                ),
             },
             "specificity": {
                 "type": "string",
