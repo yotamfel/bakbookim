@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { api } from '../../lib/api'
 
@@ -9,6 +9,9 @@ export default function ClustersManager() {
   const [mergeTarget, setMergeTarget] = useState({})
   const [noteDraft, setNoteDraft] = useState({})
   const [confirmState, setConfirmState] = useState(null) // { message, action }
+  const [openReasonsFor, setOpenReasonsFor] = useState(null)
+  const [reasonsByCluster, setReasonsByCluster] = useState({})
+  const [reasonDraft, setReasonDraft] = useState({})
 
   function load() {
     setLoading(true)
@@ -76,6 +79,47 @@ export default function ClustersManager() {
     if (action) await action()
   }
 
+  async function toggleReasons(cluster) {
+    if (openReasonsFor === cluster.id) {
+      setOpenReasonsFor(null)
+      return
+    }
+    setOpenReasonsFor(cluster.id)
+    if (!reasonsByCluster[cluster.id]) {
+      const data = await api.adminListClusterReasons(cluster.id)
+      setReasonsByCluster((r) => ({ ...r, [cluster.id]: data }))
+    }
+  }
+
+  async function saveReason(item, clusterId) {
+    const text = (reasonDraft[item.request_id] ?? item.reason).trim()
+    await api.adminUpdateRequest(item.request_id, { reason: text || null })
+    setReasonsByCluster((r) => ({
+      ...r,
+      [clusterId]: text
+        ? r[clusterId].map((x) => (x.request_id === item.request_id ? { ...x, reason: text } : x))
+        : r[clusterId].filter((x) => x.request_id !== item.request_id),
+    }))
+    setReasonDraft((d) => {
+      const next = { ...d }
+      delete next[item.request_id]
+      return next
+    })
+  }
+
+  function askDeleteReason(item, clusterId) {
+    setConfirmState({
+      message: `למחוק את הסיבה "${item.reason}"? הבקשה עצמה תישאר, רק הסיבה תוסר מהרשימה הציבורית.`,
+      action: async () => {
+        await api.adminUpdateRequest(item.request_id, { reason: null })
+        setReasonsByCluster((r) => ({
+          ...r,
+          [clusterId]: r[clusterId].filter((x) => x.request_id !== item.request_id),
+        }))
+      },
+    })
+  }
+
   return (
     <div>
       {loading && <p className="text-bakfg/60">טוען...</p>}
@@ -108,7 +152,8 @@ export default function ClustersManager() {
             </thead>
             <tbody>
               {clusters.map((cluster) => (
-                <tr key={cluster.id} className="border-t border-black/5">
+                <Fragment key={cluster.id}>
+                <tr className="border-t border-black/5">
                   <Td wrap>{cluster.canonical_name}</Td>
                   <Td>{cluster.category}</Td>
                   <Td>
@@ -164,11 +209,55 @@ export default function ClustersManager() {
                     })()}
                   </Td>
                   <Td>
-                    <button onClick={() => askDeleteAllForProduct(cluster)} className="text-sm text-red-600">
-                      מחק את כל הבקשות
-                    </button>
+                    <div className="flex flex-col items-start gap-1">
+                      <button onClick={() => toggleReasons(cluster)} className="text-sm text-brand">
+                        {openReasonsFor === cluster.id ? 'סגור סיבות' : '💬 סיבות'}
+                      </button>
+                      <button onClick={() => askDeleteAllForProduct(cluster)} className="text-sm text-red-600">
+                        מחק את כל הבקשות
+                      </button>
+                    </div>
                   </Td>
                 </tr>
+                {openReasonsFor === cluster.id && (
+                  <tr className="border-t border-black/5 bg-bakbg-soft/50">
+                    <td colSpan={8} className="px-3 py-3">
+                      {!reasonsByCluster[cluster.id] && <p className="text-sm text-bakfg/60">טוען...</p>}
+                      {reasonsByCluster[cluster.id]?.length === 0 && (
+                        <p className="text-sm text-bakfg/50">אין סיבות למוצר הזה.</p>
+                      )}
+                      {reasonsByCluster[cluster.id]?.length > 0 && (
+                        <div className="space-y-2">
+                          {reasonsByCluster[cluster.id].map((item) => (
+                            <div key={item.request_id} className="flex items-start gap-2">
+                              <textarea
+                                value={reasonDraft[item.request_id] ?? item.reason}
+                                onChange={(e) =>
+                                  setReasonDraft((d) => ({ ...d, [item.request_id]: e.target.value }))
+                                }
+                                rows={1}
+                                className="w-full rounded border border-black/10 px-2 py-1 text-sm"
+                              />
+                              <button
+                                onClick={() => saveReason(item, cluster.id)}
+                                className="shrink-0 text-sm text-brand"
+                              >
+                                שמור
+                              </button>
+                              <button
+                                onClick={() => askDeleteReason(item, cluster.id)}
+                                className="shrink-0 text-sm text-red-600"
+                              >
+                                מחק
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>

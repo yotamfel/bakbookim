@@ -45,6 +45,7 @@ export const api = {
     return request(`/admin/requests/bulk?${qs}`, { method: 'DELETE' })
   },
   adminListClusters: () => request('/admin/clusters'),
+  adminListClusterReasons: (clusterId) => request(`/admin/clusters/${clusterId}/reasons`),
   adminUpdateCluster: (id, payload) =>
     request(`/admin/clusters/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
   adminMergeClusters: (sourceId, targetId) =>

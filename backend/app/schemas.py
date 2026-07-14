@@ -129,3 +129,9 @@ class AdminClusterUpdateIn(BaseModel):
 class AdminClusterMergeIn(BaseModel):
     source_cluster_id: uuid.UUID
     target_cluster_id: uuid.UUID
+
+
+class AdminReasonOut(BaseModel):
+    request_id: uuid.UUID
+    reason: str
+    created_at: datetime

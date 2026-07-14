@@ -15,6 +15,7 @@ from app.schemas import (
     AdminClusterUpdateIn,
     AdminLoginIn,
     AdminLoginOut,
+    AdminReasonOut,
     AdminRequestOut,
     AdminRequestUpdateIn,
 )
@@ -168,6 +169,24 @@ def delete_request(
 def list_clusters(_admin: str = Depends(require_admin), db: Session = Depends(get_db)) -> list[AdminClusterOut]:
     clusters = db.execute(select(Cluster).order_by(Cluster.last_seen_at.desc()).limit(500)).scalars().all()
     return [AdminClusterOut.model_validate(c) for c in clusters]
+
+
+@router.get("/clusters/{cluster_id}/reasons", response_model=list[AdminReasonOut])
+def list_cluster_reasons(
+    cluster_id: uuid.UUID, _admin: str = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[AdminReasonOut]:
+    """All reasons for a product, with their owning request_id, so the admin can edit or clear an
+    individual one via the existing PATCH /admin/requests/{id} (reason=... / reason=null)."""
+    rows = db.execute(
+        select(RequestModel.id, RequestModel.reason, RequestModel.created_at)
+        .where(
+            RequestModel.cluster_id == cluster_id,
+            RequestModel.reason.is_not(None),
+            RequestModel.reason != "",
+        )
+        .order_by(RequestModel.created_at.desc())
+    ).all()
+    return [AdminReasonOut(request_id=r.id, reason=r.reason, created_at=r.created_at) for r in rows]
 
 
 @router.patch("/clusters/{cluster_id}", response_model=AdminClusterOut)
