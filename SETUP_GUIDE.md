@@ -87,9 +87,12 @@ Repo: https://github.com/yotamfel/bakbookim (branch `main`, פוש ראשוני 
    Settings → Source → **Root Directory** → להקליד `backend`. בלי זה, ה-deploy הבא שיופעל
    מ-push ל-GitHub (במקום מה-upload הידני שביצענו) עלול להיכשל כי יש גם `frontend/` באותו repo.
 2. עבור ה-service **`daily-snapshot-job`** בלבד:
-   - Settings → Deploy → **Custom Start Command** → `python -m jobs.daily_snapshot`
    - Settings → Deploy → **Cron Schedule** → `0 3 * * *` (כל יום 3 לפנות בוקר, אפשר לשנות)
-   - (ה-Healthcheck לא רלוונטי ל-service הזה — זה batch job, לא web server)
+   - **חשוב:** בגלל ששני ה-services חולקים את אותה תיקיית root (`backend`), Railway מאפס את
+     ה-Custom Start Command שנקבע ידנית בדשבורד בכל דיפלוי חדש, בהתאם ל-`railway.json` שבקוד
+     (שמוגדר ל-web server, לא ל-job). הפתרון: יש קובץ נפרד `backend/railway.cron.json` בקוד -
+     צריך להצביע את ה-service הזה עליו: Settings → (חפש "Config-as-code Path" / "Config File",
+     יכול להיות תחת Build או Source) → להקליד `/backend/railway.cron.json`. אחרי זה Redeploy.
 3. ה-admin user כבר נוצר מול אותו DB (`admin` / הסיסמה שנקבעה קודם) — לא צריך לחזור על זה.
 
 לבדיקה שה-cron מוגדר נכון: Railway → `daily-snapshot-job` → Deployments, לוודא שריצה ידנית
