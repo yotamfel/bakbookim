@@ -75,4 +75,4 @@ def get_cluster_reasons(
         .scalars()
         .all()
     )
-    return ClusterReasonsOut(ai_summary_note=cluster.ai_summary_note, recent_reasons=list(reasons))
+    return ClusterReasonsOut(recent_reasons=list(reasons))

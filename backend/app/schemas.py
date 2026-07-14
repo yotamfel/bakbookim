@@ -65,7 +65,6 @@ class ClusterListItemOut(BaseModel):
 
 
 class ClusterReasonsOut(BaseModel):
-    ai_summary_note: str | None
     recent_reasons: list[str]
 
 

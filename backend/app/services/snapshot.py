@@ -14,25 +14,18 @@ would silently hide a genuinely trending or brand-new item that just hasn't accu
 already documents unique_submitters as best-effort, since not every request includes contact
 info) rather than a windowed count — there is no per-window identity log to derive that from.
 
-`refresh_ai_summaries` re-summarizes a cluster only if it has a reason newer than
-`ai_summary_updated_at` — otherwise every cluster touched by any snapshot (up to `_STORAGE_CAP`
-per range) would call Claude daily even when nothing changed since its last summary.
+No AI calls happen here — the "why" panel shows submitters' raw reason text directly instead of
+an AI-generated summary, so this job is pure aggregation.
 """
 
 import uuid
 from datetime import date, timedelta
 
-from anthropic import Anthropic
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.models import Cluster, ClusterDailyCount, DailySnapshot, RangeType
-from app.models import Request as RequestModel
 from app.models import RequestType
-
-settings = get_settings()
-_client = Anthropic(api_key=settings.anthropic_api_key)
 
 _RANGE_DAYS = {
     RangeType.week: 7,
@@ -112,58 +105,10 @@ def upsert_snapshot(
         )
 
 
-def _summarize_reasons(product_name: str, reasons: list[str]) -> str:
-    joined = "\n".join(f"- {r}" for r in reasons)
-    message = _client.messages.create(
-        model=settings.summary_model,
-        max_tokens=200,
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"להלן סיבות שחברי קהילה כתבו לבקשת המוצר '{product_name}':\n{joined}\n\n"
-                    "כתוב תמצות קצר (1-2 משפטים, בעברית) של הסיבות הנפוצות. החזר רק את התמצות, בלי הקדמות."
-                ),
-            }
-        ],
-    )
-    return "".join(block.text for block in message.content if block.type == "text").strip()
-
-
-def refresh_ai_summaries(db: Session, cluster_ids: set[uuid.UUID]) -> None:
-    for cluster_id in cluster_ids:
-        cluster = db.get(Cluster, cluster_id)
-        if cluster is None:
-            continue
-
-        rows = db.execute(
-            select(RequestModel.reason, RequestModel.created_at)
-            .where(
-                RequestModel.cluster_id == cluster_id,
-                RequestModel.reason.is_not(None),
-                RequestModel.reason != "",
-            )
-            .order_by(RequestModel.created_at.desc())
-            .limit(20)
-        ).all()
-        if not rows:
-            continue
-
-        latest_reason_at = rows[0][1]
-        if cluster.ai_summary_updated_at is not None and latest_reason_at <= cluster.ai_summary_updated_at:
-            continue  # no new reasons since the last summary — skip the Claude call
-
-        cluster.ai_summary_note = _summarize_reasons(cluster.canonical_name, [r for r, _ in rows])
-        cluster.ai_summary_updated_at = latest_reason_at
-
-
 def run_daily_job(db: Session) -> None:
     today = date.today()
-    touched_cluster_ids: set[uuid.UUID] = set()
     for request_type in RequestType:
         for range_type in RangeType:
             ranked_list = build_snapshot(db, request_type, range_type, today)
             upsert_snapshot(db, request_type, range_type, today, ranked_list)
-            touched_cluster_ids.update(uuid.UUID(item["cluster_id"]) for item in ranked_list)
-    refresh_ai_summaries(db, touched_cluster_ids)
     db.commit()

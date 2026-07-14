@@ -71,8 +71,7 @@ export default function ClusterCard({ cluster, rank, onJoined }) {
           {loadingReasons && !reasons && <p className="text-bakfg/60">טוען...</p>}
           {reasons && (
             <>
-              {reasons.ai_summary_note && <p className="font-medium text-bakfg">{reasons.ai_summary_note}</p>}
-              <ul className="mt-2 space-y-1 text-bakfg/70">
+              <ul className="space-y-1 text-bakfg/70">
                 {reasons.recent_reasons.map((r, i) => (
                   <li key={i}>“{r}”</li>
                 ))}

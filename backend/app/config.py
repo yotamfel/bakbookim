@@ -30,7 +30,6 @@ class Settings(BaseSettings):
 
     embedding_model: str = "text-embedding-3-large"
     normalization_model: str = "claude-sonnet-5"
-    summary_model: str = "claude-sonnet-5"
 
     @property
     def cors_origins_list(self) -> list[str]:
