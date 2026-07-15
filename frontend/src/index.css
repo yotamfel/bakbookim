@@ -47,16 +47,13 @@ h3 {
 
 .product-cloud text {
   cursor: pointer;
-  /* d3-cloud positions each word via its own `transform="translate(x,y) rotate(0)"` SVG
-     attribute. A CSS `transform` rule here would overwrite that positioning entirely (the word
-     jumps to the wrong spot on hover) — the standalone `scale` property composes independently
-     instead, so hovering only scales the word in place. */
-  transition: opacity 0.15s ease, scale 0.15s ease;
-  transform-box: fill-box;
-  transform-origin: center;
+  /* No grow-on-hover: words sit close together in this dense a layout, so scaling one on
+     hover can push it into a neighbor's hit area and trigger a hover/scale feedback loop
+     between the two (the reported "vibrating" glitch). Opacity-only feedback has no
+     geometry to fight with. */
+  transition: opacity 0.15s ease;
 }
 
 .product-cloud text:hover {
   opacity: 1 !important;
-  scale: 1.15;
 }

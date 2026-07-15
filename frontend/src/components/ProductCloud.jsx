@@ -21,12 +21,9 @@ export default function ProductCloud({ items, onSelect }) {
     function measure() {
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
-      const availableWidth = containerRef.current.offsetWidth
-      const availableHeight = Math.max(MIN_HEIGHT, window.innerHeight - rect.top - BOTTOM_RESERVE)
-      // Cap the layout canvas closer to a square (instead of stretching across the full page
-      // width) so the cloud reads as a round/compact blob rather than a wide, elongated banner.
-      const width = Math.min(availableWidth, availableHeight * 1.35)
-      setSize({ width, height: availableHeight })
+      const width = containerRef.current.offsetWidth
+      const height = Math.max(MIN_HEIGHT, window.innerHeight - rect.top - BOTTOM_RESERVE)
+      setSize({ width, height })
     }
     // Runs after layout settles (fonts, filter card height) so the top offset is accurate.
     const raf = requestAnimationFrame(measure)
