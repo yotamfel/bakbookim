@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import WordCloud from 'react-d3-cloud'
 
-// Muted brand-derived palette so the messy/organic layout still reads as "this site", not a
-// generic multicolor word cloud. Kept dark/medium-saturated throughout — anything as light as
-// the accent color (#b586ff) loses legibility against the page's own light background.
-const PALETTE = ['#0b0633', '#484bdd', '#334fb4', '#6b3fa0', '#5b3a99', '#2d2560', '#7a3fae']
+// A more varied brand-derived palette — mixes the cool brand tones with a couple of warm
+// wine/maroon accents for contrast between neighboring words. Kept dark/medium-saturated
+// throughout — anything as light as the accent color (#b586ff) loses legibility against the
+// page's own light background.
+const PALETTE = ['#0b0633', '#484bdd', '#7a1f3d', '#334fb4', '#5b3a99', '#8a3a5c', '#2d2560', '#3f6b6a']
 
 // Reserve space below the cloud for the footer link so the page never needs to scroll.
 const BOTTOM_RESERVE = 95
 const MIN_HEIGHT = 260
+const MIN_FONT = 12
+const MAX_FONT = 68
 
 export default function ProductCloud({ items, onSelect }) {
   const containerRef = useRef(null)
@@ -18,10 +21,12 @@ export default function ProductCloud({ items, onSelect }) {
     function measure() {
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
-      setSize({
-        width: containerRef.current.offsetWidth,
-        height: Math.max(MIN_HEIGHT, window.innerHeight - rect.top - BOTTOM_RESERVE),
-      })
+      const availableWidth = containerRef.current.offsetWidth
+      const availableHeight = Math.max(MIN_HEIGHT, window.innerHeight - rect.top - BOTTOM_RESERVE)
+      // Cap the layout canvas closer to a square (instead of stretching across the full page
+      // width) so the cloud reads as a round/compact blob rather than a wide, elongated banner.
+      const width = Math.min(availableWidth, availableHeight * 1.35)
+      setSize({ width, height: availableHeight })
     }
     // Runs after layout settles (fonts, filter card height) so the top offset is accurate.
     const raf = requestAnimationFrame(measure)
@@ -42,14 +47,20 @@ export default function ProductCloud({ items, onSelect }) {
   }))
 
   return (
-    <div ref={containerRef} className="product-cloud w-full overflow-hidden">
+    <div
+      ref={containerRef}
+      className="product-cloud flex w-full justify-center overflow-hidden"
+      style={{ height: size.height }}
+    >
       <WordCloud
         data={data}
         width={size.width}
         height={size.height}
         font="Heebo"
         fontWeight="300"
-        fontSize={(word) => 10 + Math.sqrt(word.value / n) * (size.height > 400 ? 34 : 24)}
+        // Linear by rank, not sqrt — a clear, evenly-paced size step from most to least popular,
+        // rather than a curve where most items cluster near the max size.
+        fontSize={(word) => MIN_FONT + (n > 1 ? (word.value - 1) / (n - 1) : 1) * (MAX_FONT - MIN_FONT)}
         rotate={() => 0}
         padding={5}
         fill={(_d, i) => PALETTE[i % PALETTE.length]}

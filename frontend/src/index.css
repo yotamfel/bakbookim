@@ -40,14 +40,23 @@ h3 {
   font-family: var(--font-heading);
 }
 
+.product-cloud svg {
+  width: 100%;
+  height: 100%;
+}
+
 .product-cloud text {
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  /* d3-cloud positions each word via its own `transform="translate(x,y) rotate(0)"` SVG
+     attribute. A CSS `transform` rule here would overwrite that positioning entirely (the word
+     jumps to the wrong spot on hover) — the standalone `scale` property composes independently
+     instead, so hovering only scales the word in place. */
+  transition: opacity 0.15s ease, scale 0.15s ease;
   transform-box: fill-box;
   transform-origin: center;
 }
 
 .product-cloud text:hover {
   opacity: 1 !important;
-  transform: scale(1.15);
+  scale: 1.15;
 }
