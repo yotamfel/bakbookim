@@ -12,6 +12,10 @@ const BOTTOM_RESERVE = 95
 const MIN_HEIGHT = 260
 const MIN_FONT = 12
 const MAX_FONT = 68
+// Words are sized in tiers of 5 by rank — the top 5 all render at the same (largest) size,
+// the next 5 all share the next size down, and so on — rather than every single item getting
+// its own slightly-different size.
+const GROUP_SIZE = 5
 
 export default function ProductCloud({ items, onSelect }) {
   const containerRef = useRef(null)
@@ -40,8 +44,10 @@ export default function ProductCloud({ items, onSelect }) {
   const data = items.map((item, index) => ({
     text: item.canonical_name,
     value: n - index,
+    rank: index,
     cluster: item,
   }))
+  const numGroups = Math.ceil(n / GROUP_SIZE)
 
   return (
     <div
@@ -55,9 +61,11 @@ export default function ProductCloud({ items, onSelect }) {
         height={size.height}
         font="Heebo"
         fontWeight="300"
-        // Linear by rank, not sqrt — a clear, evenly-paced size step from most to least popular,
-        // rather than a curve where most items cluster near the max size.
-        fontSize={(word) => MIN_FONT + (n > 1 ? (word.value - 1) / (n - 1) : 1) * (MAX_FONT - MIN_FONT)}
+        fontSize={(word) => {
+          const group = Math.floor(word.rank / GROUP_SIZE)
+          const t = numGroups > 1 ? 1 - group / (numGroups - 1) : 1
+          return MIN_FONT + t * (MAX_FONT - MIN_FONT)
+        }}
         rotate={() => 0}
         padding={5}
         fill={(_d, i) => PALETTE[i % PALETTE.length]}
