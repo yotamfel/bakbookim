@@ -35,6 +35,43 @@ def submit_requests(
     # Each product in a multi-product submission becomes its own `requests` row with its own
     # normalization/embedding/cluster (SPEC.md section 13) — keeps clustering accuracy per item.
     for item in payload.items:
+        if item.cluster_id is not None:
+            # Picked an already-known product from the catalog — the user themselves confirmed
+            # the identity, so there's nothing to normalize or embed; join directly, same as the
+            # "גם אני רוצה" flow.
+            cluster = db.get(Cluster, item.cluster_id)
+            if cluster is None:
+                raise HTTPException(status_code=404, detail="המוצר שנבחר לא נמצא")
+            clustering.join_cluster(
+                db, cluster, cluster.centroid_embedding, payload.submitter_phone, payload.submitter_name
+            )
+            request_row = RequestModel(
+                request_type=cluster.request_type,
+                category=cluster.category,
+                original_text=f"[נבחר מהמאגר] {cluster.canonical_name}",
+                canonical_brand=cluster.canonical_brand,
+                canonical_variant=cluster.canonical_variant,
+                reason=item.reason,
+                submitter_name=payload.submitter_name,
+                submitter_phone=payload.submitter_phone,
+                is_joined_existing=True,
+                cluster_id=cluster.id,
+                embedding=cluster.centroid_embedding,
+                ip_hash=ip_hash,
+            )
+            db.add(request_row)
+            db.flush()
+            results.append(
+                RequestResultOut(
+                    request_id=request_row.id,
+                    cluster_id=cluster.id,
+                    canonical_name=cluster.canonical_name,
+                    is_new_cluster=False,
+                    redirected_to_return=False,
+                )
+            )
+            continue
+
         normalized = normalize(item.original_text, item.category)
         category = normalized.get("category") or item.category
         canonical_brand = normalized.get("canonical_brand") or ""

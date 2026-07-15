@@ -1,9 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CATEGORIES } from '../lib/constants'
 import { api } from '../lib/api'
 
-const emptyItem = () => ({ category: CATEGORIES[0], original_text: '', reason: '' })
+const OTHER = '__other__'
+
+const emptyItem = () => ({
+  category: CATEGORIES[0],
+  mode: 'catalog', // 'catalog' = pick an existing product (no AI needed) | 'free' = type it out
+  brand: '',
+  brands: [],
+  brandsLoaded: false,
+  cluster_id: '',
+  products: [],
+  productsLoaded: false,
+  original_text: '',
+  reason: '',
+})
 
 export default function RequestForm() {
   const { requestType: paramType } = useParams() // optional pre-selection: 'return' | 'new'
@@ -19,20 +32,101 @@ export default function RequestForm() {
   const [error, setError] = useState(null)
   const [done, setDone] = useState(null)
 
-  function updateItem(index, field, value) {
-    setItems((prev) => prev.map((it, i) => (i === index ? { ...it, [field]: value } : it)))
+  function patchItem(index, patch) {
+    setItems((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)))
+  }
+
+  async function loadBrands(index, category) {
+    patchItem(index, { brands: [], brandsLoaded: false })
+    const brands = await api.getCatalogBrands(selectedType, category)
+    // Nothing to pick from yet — skip straight to free text instead of showing an empty dropdown.
+    if (brands.length === 0) {
+      patchItem(index, { brands: [], brandsLoaded: true, mode: 'free' })
+      return
+    }
+    patchItem(index, { brands, brandsLoaded: true })
+  }
+
+  // Handles both entry paths: picking a track from the in-page buttons below, and arriving
+  // directly at /request/return or /request/new (selectedType already set from the URL param,
+  // so the buttons' onClick never fires).
+  useEffect(() => {
+    if (selectedType && !items[0].brandsLoaded && items[0].mode === 'catalog') {
+      loadBrands(0, items[0].category)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType])
+
+  async function loadProducts(index, category, brand) {
+    patchItem(index, { products: [], productsLoaded: false })
+    const products = await api.getCatalogProducts(selectedType, category, brand)
+    patchItem(index, { products, productsLoaded: true })
+  }
+
+  function onCategoryChange(index, category) {
+    patchItem(index, {
+      category,
+      mode: 'catalog',
+      brand: '',
+      brands: [],
+      brandsLoaded: false,
+      cluster_id: '',
+      products: [],
+      productsLoaded: false,
+    })
+    loadBrands(index, category)
+  }
+
+  function onBrandChange(index, value, category) {
+    if (value === OTHER) {
+      patchItem(index, { mode: 'free', brand: '', cluster_id: '' })
+      return
+    }
+    patchItem(index, { brand: value, cluster_id: '', products: [], productsLoaded: false })
+    loadProducts(index, category, value)
+  }
+
+  function onProductChange(index, value) {
+    if (value === OTHER) {
+      patchItem(index, { mode: 'free', cluster_id: '' })
+      return
+    }
+    patchItem(index, { cluster_id: value })
+  }
+
+  function switchToCatalog(index, category) {
+    patchItem(index, { mode: 'catalog', original_text: '', brand: '', cluster_id: '', brandsLoaded: false })
+    loadBrands(index, category)
   }
 
   function addItem() {
     setItems((prev) => [...prev, emptyItem()])
+    const index = items.length
+    loadBrands(index, CATEGORIES[0])
   }
 
   function removeItem(index) {
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
 
+  function updateReason(index, value) {
+    patchItem(index, { reason: value })
+  }
+
+  function updateFreeText(index, value) {
+    patchItem(index, { original_text: value })
+  }
+
+  function itemIsComplete(item) {
+    return item.mode === 'catalog' ? Boolean(item.cluster_id) : Boolean(item.original_text.trim())
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!items.every(itemIsComplete)) {
+      setError(isNew ? 'יש לבחור או לכתוב מוצר לכל פריט' : 'יש לבחור או לכתוב מוצר לכל פריט')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
@@ -40,11 +134,11 @@ export default function RequestForm() {
         request_type: selectedType,
         submitter_name: name || null,
         submitter_phone: phone || null,
-        items: items.map((it) => ({
-          category: it.category,
-          original_text: it.original_text,
-          reason: it.reason || null,
-        })),
+        items: items.map((it) =>
+          it.mode === 'catalog'
+            ? { category: it.category, cluster_id: it.cluster_id, reason: it.reason || null }
+            : { category: it.category, original_text: it.original_text, reason: it.reason || null }
+        ),
       }
       const result = await api.submitRequests(payload)
       setDone(result)
@@ -151,7 +245,7 @@ export default function RequestForm() {
           <label className="mt-2 block text-sm text-bakfg/70">קטגוריה</label>
           <select
             value={item.category}
-            onChange={(e) => updateItem(index, 'category', e.target.value)}
+            onChange={(e) => onCategoryChange(index, e.target.value)}
             className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
           >
             {CATEGORIES.map((c) => (
@@ -161,21 +255,80 @@ export default function RequestForm() {
             ))}
           </select>
 
-          <label className="mt-3 block text-sm text-bakfg/70">
-            {isNew ? 'איזה מוצר תרצו שנביא?' : 'איזה מוצר תרצו שיחזור?'}
-          </label>
-          <input
-            required
-            value={item.original_text}
-            onChange={(e) => updateItem(index, 'original_text', e.target.value)}
-            placeholder="לדוגמה: מקאלן 18 / Macallan 18"
-            className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
-          />
+          {item.mode === 'catalog' ? (
+            <>
+              <label className="mt-3 block text-sm text-bakfg/70">מותג</label>
+              {!item.brandsLoaded ? (
+                <p className="mt-1 text-sm text-bakfg/50">טוען...</p>
+              ) : (
+                <select
+                  value={item.brand}
+                  onChange={(e) => onBrandChange(index, e.target.value, item.category)}
+                  className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                >
+                  <option value="" disabled>
+                    בחרו מותג...
+                  </option>
+                  {item.brands.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                  <option value={OTHER}>המותג שלי לא ברשימה — אכתוב בעצמי</option>
+                </select>
+              )}
+
+              {item.brand && (
+                <>
+                  <label className="mt-3 block text-sm text-bakfg/70">דגם</label>
+                  {!item.productsLoaded ? (
+                    <p className="mt-1 text-sm text-bakfg/50">טוען...</p>
+                  ) : (
+                    <select
+                      value={item.cluster_id}
+                      onChange={(e) => onProductChange(index, e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    >
+                      <option value="" disabled>
+                        בחרו דגם...
+                      </option>
+                      {item.products.map((p) => (
+                        <option key={p.cluster_id} value={p.cluster_id}>
+                          {p.canonical_variant || p.canonical_name}
+                        </option>
+                      ))}
+                      <option value={OTHER}>הדגם שלי לא ברשימה — אכתוב בעצמי</option>
+                    </select>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <label className="mt-3 block text-sm text-bakfg/70">
+                {isNew ? 'איזה מוצר תרצו שנביא?' : 'איזה מוצר תרצו שיחזור?'}
+              </label>
+              <input
+                required
+                value={item.original_text}
+                onChange={(e) => updateFreeText(index, e.target.value)}
+                placeholder="לדוגמה: מקאלן 18 / Macallan 18"
+                className="mt-1 w-full rounded-lg border border-black/10 bg-white px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              />
+              <button
+                type="button"
+                onClick={() => switchToCatalog(index, item.category)}
+                className="mt-1 text-xs text-brand hover:underline"
+              >
+                בחרו מהמאגר הקיים במקום
+              </button>
+            </>
+          )}
 
           <label className="mt-3 block text-sm text-bakfg/70">למה אתם רוצים את המוצר הזה? (אופציונלי)</label>
           <textarea
             value={item.reason}
-            onChange={(e) => updateItem(index, 'reason', e.target.value)}
+            onChange={(e) => updateReason(index, e.target.value)}
             placeholder={
               isNew
                 ? 'נשמח שתכתבו למה אתם רוצים את המוצר הזה — זה עוזר לשאר חברי הקהילה להכיר מוצרים חדשים 😊'

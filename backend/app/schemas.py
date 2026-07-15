@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models import RangeType, RequestType
 
@@ -10,13 +10,23 @@ from app.models import RangeType, RequestType
 
 class RequestItemIn(BaseModel):
     category: str
-    original_text: str = Field(min_length=1, max_length=500)
+    # Exactly one of these two: original_text for free-text entry (goes through AI
+    # normalization), or cluster_id to pick an already-known product from the catalog
+    # (skips normalization/embedding entirely — see routers/catalog.py).
+    original_text: str | None = Field(default=None, max_length=500)
+    cluster_id: uuid.UUID | None = None
     reason: str | None = Field(default=None, max_length=1000)
 
     @field_validator("original_text")
     @classmethod
-    def strip_text(cls, v: str) -> str:
-        return v.strip()
+    def strip_text(cls, v: str | None) -> str | None:
+        return v.strip() if v else v
+
+    @model_validator(mode="after")
+    def exactly_one_source(self) -> "RequestItemIn":
+        if bool(self.original_text) == bool(self.cluster_id):
+            raise ValueError("יש לספק בדיוק אחד מ- original_text או cluster_id")
+        return self
 
 
 class RequestSubmissionIn(BaseModel):
@@ -47,6 +57,14 @@ class JoinExistingOut(BaseModel):
     request_id: uuid.UUID
     cluster_id: uuid.UUID
     total_requests: int
+
+
+# ---------- Public: catalog (pick an existing product instead of free text) ----------
+
+class CatalogProductOut(BaseModel):
+    cluster_id: uuid.UUID
+    canonical_variant: str | None
+    canonical_name: str
 
 
 # ---------- Public: lists ----------

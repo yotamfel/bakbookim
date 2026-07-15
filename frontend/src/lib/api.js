@@ -29,6 +29,12 @@ export const api = {
     return request(`/lists/${requestType}${qs ? `?${qs}` : ''}`)
   },
   getClusterReasons: (clusterId, limit = 5) => request(`/clusters/${clusterId}/reasons?limit=${limit}`),
+  getCatalogBrands: (requestType, category) =>
+    request(`/catalog/brands?request_type=${requestType}&category=${encodeURIComponent(category)}`),
+  getCatalogProducts: (requestType, category, brand) =>
+    request(
+      `/catalog/products?request_type=${requestType}&category=${encodeURIComponent(category)}&canonical_brand=${encodeURIComponent(brand)}`
+    ),
   submitRequests: (payload) => request('/requests', { method: 'POST', body: JSON.stringify(payload) }),
   joinExisting: (clusterId, payload) =>
     request(`/requests/join/${clusterId}`, { method: 'POST', body: JSON.stringify(payload) }),

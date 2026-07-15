@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import admin, lists, requests
+from app.routers import admin, catalog, lists, requests
 
 settings = get_settings()
 
@@ -18,6 +18,7 @@ app.add_middleware(
 
 app.include_router(requests.router)
 app.include_router(lists.router)
+app.include_router(catalog.router)
 app.include_router(admin.router)
 
 
