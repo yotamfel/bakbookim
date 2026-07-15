@@ -19,6 +19,12 @@ const MAX_FONT = 46
 // and so on.
 const GROUP_SIZE = 5
 
+// Temporary font A/B comparison — cycles through candidates by rank so several show at once.
+// Word 1 = FONTS[0], word 2 = FONTS[1], etc., repeating. Fonts without a light weight fall back
+// to their default (400) since Suez One / Secular One only ship one weight.
+const FONTS = ['Heebo', 'Rubik', 'Frank Ruhl Libre', 'Suez One', 'Secular One']
+const LIGHT_WEIGHT_FONTS = new Set(['Heebo', 'Rubik', 'Frank Ruhl Libre'])
+
 function tierOf(rank) {
   if (rank < GROUP_SIZE) return rank
   return GROUP_SIZE + Math.floor((rank - GROUP_SIZE) / GROUP_SIZE)
@@ -66,8 +72,8 @@ export default function ProductCloud({ items, onSelect }) {
         data={data}
         width={size.width}
         height={size.height}
-        font="Heebo"
-        fontWeight="300"
+        font={(word) => FONTS[word.rank % FONTS.length]}
+        fontWeight={(word) => (LIGHT_WEIGHT_FONTS.has(FONTS[word.rank % FONTS.length]) ? '300' : '400')}
         fontSize={(word) => {
           const tier = tierOf(word.rank)
           const t = maxTier > 0 ? 1 - tier / maxTier : 1

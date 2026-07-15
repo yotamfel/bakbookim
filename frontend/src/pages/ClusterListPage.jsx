@@ -111,10 +111,12 @@ export default function ClusterListPage() {
           </div>
         )}
         {!loading && !error && items.length > 0 && (
-          // Breaks out of the centered max-w container so the cloud spans the full viewport width.
-          <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">
-            <ProductCloud items={items} onSelect={setSelected} />
-          </div>
+          // The page's own top-level div has no max-width, so the cloud (a direct child of the
+          // unconstrained `mt-2` wrapper above) is naturally full-width — no vw-based breakout
+          // needed. That trick (`w-screen` / `50vw`) measures the *full* viewport including the
+          // scrollbar's reserved width on non-overlay-scrollbar systems (Windows Chrome/Edge),
+          // which overshot by the scrollbar's width and caused a persistent horizontal scrollbar.
+          <ProductCloud items={items} onSelect={setSelected} />
         )}
       </div>
 
