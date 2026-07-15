@@ -11,11 +11,18 @@ const PALETTE = ['#0b0633', '#484bdd', '#7a1f3d', '#334fb4', '#5b3a99', '#8a3a5c
 const BOTTOM_RESERVE = 95
 const MIN_HEIGHT = 260
 const MIN_FONT = 12
-const MAX_FONT = 68
-// Words are sized in tiers of 5 by rank — the top 5 all render at the same (largest) size,
-// the next 5 all share the next size down, and so on — rather than every single item getting
-// its own slightly-different size.
+// Kept modest rather than dramatic — longer product names will need the horizontal room, and an
+// overly large top tier leaves less margin before words start colliding/clipping as names grow.
+const MAX_FONT = 46
+// The top 5 ranks each get their own distinct size (#1 biggest, tapering down to #5); from rank
+// 6 onward, words are sized in tiers of 5 — ranks 6-10 share a size, 11-15 the next size down,
+// and so on.
 const GROUP_SIZE = 5
+
+function tierOf(rank) {
+  if (rank < GROUP_SIZE) return rank
+  return GROUP_SIZE + Math.floor((rank - GROUP_SIZE) / GROUP_SIZE)
+}
 
 export default function ProductCloud({ items, onSelect }) {
   const containerRef = useRef(null)
@@ -47,7 +54,7 @@ export default function ProductCloud({ items, onSelect }) {
     rank: index,
     cluster: item,
   }))
-  const numGroups = Math.ceil(n / GROUP_SIZE)
+  const maxTier = tierOf(Math.max(n - 1, 0))
 
   return (
     <div
@@ -62,14 +69,14 @@ export default function ProductCloud({ items, onSelect }) {
         font="Heebo"
         fontWeight="300"
         fontSize={(word) => {
-          const group = Math.floor(word.rank / GROUP_SIZE)
-          const t = numGroups > 1 ? 1 - group / (numGroups - 1) : 1
+          const tier = tierOf(word.rank)
+          const t = maxTier > 0 ? 1 - tier / maxTier : 1
           return MIN_FONT + t * (MAX_FONT - MIN_FONT)
         }}
         rotate={() => 0}
         padding={5}
         fill={(_d, i) => PALETTE[i % PALETTE.length]}
-        onWordClick={(_event, word) => onSelect(word.cluster)}
+        onWordClick={(_event, word) => onSelect({ ...word.cluster, rank: word.rank + 1 })}
       />
     </div>
   )

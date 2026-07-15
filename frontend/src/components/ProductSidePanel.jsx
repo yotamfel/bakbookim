@@ -69,6 +69,7 @@ export default function ProductSidePanel({ cluster, onClose, onJoined }) {
           <h3 className="font-heading text-lg font-bold text-bakfg">{cluster.canonical_name}</h3>
           <p className="text-sm text-bakfg/50">
             {cluster.category} · {cluster.total_requests} בקשות
+            {cluster.rank && ` · מקום ${cluster.rank} ברשימה`}
           </p>
         </div>
         <button onClick={onClose} className="text-2xl leading-none text-bakfg/40 hover:text-bakfg">
