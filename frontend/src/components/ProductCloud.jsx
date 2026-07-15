@@ -19,26 +19,6 @@ const MAX_FONT = 40
 // and so on.
 const GROUP_SIZE = 5
 
-// Temporary font A/B comparison — cycles through candidates by rank so several show at once.
-// Word 1 = FONTS[0], word 2 = FONTS[1], etc., repeating. Fonts without a light weight fall back
-// to their default (400). Picked for genuinely different character, not just different names:
-// clean modern sans (Heebo, Rubik), elegant serif (Frank Ruhl Libre), bold display (Suez One,
-// Secular One), classic book serif (David Libre), soft rounded sans (Varela Round), traditional
-// Times-like serif (Tinos), modern serif (Noto Serif Hebrew), thin elegant serif (Bellefair).
-export const FONTS = [
-  'Heebo',
-  'Rubik',
-  'Frank Ruhl Libre',
-  'Suez One',
-  'Secular One',
-  'David Libre',
-  'Varela Round',
-  'Tinos',
-  'Noto Serif Hebrew',
-  'Bellefair',
-]
-const LIGHT_WEIGHT_FONTS = new Set(['Heebo', 'Rubik', 'Frank Ruhl Libre', 'Noto Serif Hebrew'])
-
 function tierOf(rank) {
   if (rank < GROUP_SIZE) return rank
   return GROUP_SIZE + Math.floor((rank - GROUP_SIZE) / GROUP_SIZE)
@@ -86,8 +66,7 @@ export default function ProductCloud({ items, onSelect }) {
         data={data}
         width={size.width}
         height={size.height}
-        font={(word) => FONTS[word.rank % FONTS.length]}
-        fontWeight={(word) => (LIGHT_WEIGHT_FONTS.has(FONTS[word.rank % FONTS.length]) ? '300' : '400')}
+        font="Bellefair"
         fontSize={(word) => {
           const tier = tierOf(word.rank)
           const t = maxTier > 0 ? 1 - tier / maxTier : 1
