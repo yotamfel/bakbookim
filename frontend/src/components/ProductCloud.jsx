@@ -66,7 +66,8 @@ export default function ProductCloud({ items, onSelect }) {
         data={data}
         width={size.width}
         height={size.height}
-        font="Bellefair"
+        font="Noto Serif Hebrew"
+        fontWeight="300"
         fontSize={(word) => {
           const tier = tierOf(word.rank)
           const t = maxTier > 0 ? 1 - tier / maxTier : 1
