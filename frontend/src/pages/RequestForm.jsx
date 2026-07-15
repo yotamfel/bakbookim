@@ -154,6 +154,13 @@ export default function RequestForm() {
   if (!selectedType) {
     return (
       <div className="mx-auto max-w-xl px-4 py-10">
+        <button
+          type="button"
+          onClick={() => navigate('/return')}
+          className="mb-4 text-sm text-brand hover:underline"
+        >
+          → חזרה לרשימה
+        </button>
         <h1 className="text-center font-heading text-2xl font-bold text-bakfg">על איזה מוצר מדובר?</h1>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <button
@@ -220,13 +227,22 @@ export default function RequestForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-xl px-4 py-6">
-      <button
-        type="button"
-        onClick={() => setSelectedType(null)}
-        className="mb-2 text-sm text-brand hover:underline"
-      >
-        ← החלפת סוג בקשה
-      </button>
+      <div className="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setSelectedType(null)}
+          className="text-sm text-brand hover:underline"
+        >
+          ← החלפת סוג בקשה
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate(`/${selectedType}`)}
+          className="text-sm text-brand hover:underline"
+        >
+          → חזרה לרשימה
+        </button>
+      </div>
       <h1 className="font-heading text-2xl font-bold text-bakfg">
         {isNew ? 'בקשה למוצר חדש' : 'בקשה למוצר שהיה'}
       </h1>

@@ -10,10 +10,10 @@ const PALETTE = ['#0b0633', '#484bdd', '#7a1f3d', '#334fb4', '#5b3a99', '#8a3a5c
 // Reserve space below the cloud for the footer link so the page never needs to scroll.
 const BOTTOM_RESERVE = 95
 const MIN_HEIGHT = 260
-const MIN_FONT = 12
+const MIN_FONT = 10
 // Kept modest rather than dramatic — longer product names will need the horizontal room, and an
 // overly large top tier leaves less margin before words start colliding/clipping as names grow.
-const MAX_FONT = 46
+const MAX_FONT = 40
 // The top 5 ranks each get their own distinct size (#1 biggest, tapering down to #5); from rank
 // 6 onward, words are sized in tiers of 5 — ranks 6-10 share a size, 11-15 the next size down,
 // and so on.
@@ -22,7 +22,7 @@ const GROUP_SIZE = 5
 // Temporary font A/B comparison — cycles through candidates by rank so several show at once.
 // Word 1 = FONTS[0], word 2 = FONTS[1], etc., repeating. Fonts without a light weight fall back
 // to their default (400) since Suez One / Secular One only ship one weight.
-const FONTS = ['Heebo', 'Rubik', 'Frank Ruhl Libre', 'Suez One', 'Secular One']
+export const FONTS = ['Heebo', 'Rubik', 'Frank Ruhl Libre', 'Suez One', 'Secular One']
 const LIGHT_WEIGHT_FONTS = new Set(['Heebo', 'Rubik', 'Frank Ruhl Libre'])
 
 function tierOf(rank) {

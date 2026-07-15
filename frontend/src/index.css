@@ -19,6 +19,10 @@
 html,
 body {
   height: 100%;
+  /* Belt-and-suspenders: a 1-2px layout rounding difference is enough to trigger a horizontal
+     scrollbar on systems with a classic (non-overlay) scrollbar, like Windows Chrome/Edge — this
+     guarantees one never appears regardless of where a future sub-pixel overflow sneaks in. */
+  overflow-x: hidden;
 }
 
 body {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import FilterBar from '../components/FilterBar'
+import FontComparison from '../components/FontComparison'
 import ProductCloud from '../components/ProductCloud'
 import ProductSidePanel from '../components/ProductSidePanel'
 import { api } from '../lib/api'
@@ -101,6 +102,8 @@ export default function ClusterListPage() {
           />
         </div>
       </div>
+
+      <FontComparison />
 
       <div className="mt-2">
         {loading && <p className="mx-auto max-w-3xl px-1 text-bakfg/50">טוען...</p>}
