@@ -6,18 +6,31 @@ import WordCloud from 'react-d3-cloud'
 // the accent color (#b586ff) loses legibility against the page's own light background.
 const PALETTE = ['#0b0633', '#484bdd', '#334fb4', '#6b3fa0', '#5b3a99', '#2d2560', '#7a3fae']
 
+// Reserve space below the cloud for the footer link so the page never needs to scroll.
+const BOTTOM_RESERVE = 95
+const MIN_HEIGHT = 260
+
 export default function ProductCloud({ items, onSelect }) {
   const containerRef = useRef(null)
-  const [width, setWidth] = useState(800)
+  const [size, setSize] = useState({ width: 800, height: 400 })
 
   useEffect(() => {
     function measure() {
-      if (containerRef.current) setWidth(containerRef.current.offsetWidth)
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      setSize({
+        width: containerRef.current.offsetWidth,
+        height: Math.max(MIN_HEIGHT, window.innerHeight - rect.top - BOTTOM_RESERVE),
+      })
     }
-    measure()
+    // Runs after layout settles (fonts, filter card height) so the top offset is accurate.
+    const raf = requestAnimationFrame(measure)
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [])
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', measure)
+    }
+  }, [items])
 
   const n = items.length
   // Weight by rank in the already-sorted list, not the raw metric — so "biggest" always
@@ -29,16 +42,16 @@ export default function ProductCloud({ items, onSelect }) {
   }))
 
   return (
-    <div ref={containerRef} className="product-cloud w-full">
+    <div ref={containerRef} className="product-cloud w-full overflow-hidden">
       <WordCloud
         data={data}
-        width={width}
-        height={640}
+        width={size.width}
+        height={size.height}
         font="Heebo"
         fontWeight="300"
-        fontSize={(word) => 12 + Math.sqrt(word.value / n) * 40}
+        fontSize={(word) => 10 + Math.sqrt(word.value / n) * (size.height > 400 ? 34 : 24)}
         rotate={() => 0}
-        padding={6}
+        padding={5}
         fill={(_d, i) => PALETTE[i % PALETTE.length]}
         onWordClick={(_event, word) => onSelect(word.cluster)}
       />

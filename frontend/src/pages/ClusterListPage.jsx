@@ -60,28 +60,28 @@ export default function ClusterListPage() {
   const info = TRACK_INFO[requestType]
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-3">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-bakfg">{info.title}</h1>
-          <p className="mt-0.5 text-sm text-bakfg/50">{info.subtitle}</p>
+          <h1 className="font-heading text-xl font-bold text-bakfg">{info.title}</h1>
+          <p className="mt-0.5 text-xs text-bakfg/50">{info.subtitle}</p>
         </div>
         <Link
           to={`/request/${requestType}`}
-          className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
+          className="shrink-0 rounded-full bg-brand px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           שליחת בקשה
         </Link>
       </div>
 
-      <div className="mx-auto mt-4 max-w-3xl rounded-3xl bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:p-6">
+      <div className="mx-auto mt-3 max-w-3xl rounded-3xl bg-white/60 p-3 shadow-sm backdrop-blur-sm sm:p-4">
         <div className="flex gap-1 rounded-full bg-black/5 p-1">
           {Object.entries(TRACK_INFO).map(([key, t]) => (
             <button
               key={key}
               type="button"
               onClick={() => navigate(`/${key}`)}
-              className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 requestType === key ? 'bg-brand text-white shadow-sm' : 'text-bakfg/60 hover:bg-black/5'
               }`}
             >
@@ -90,7 +90,7 @@ export default function ClusterListPage() {
           ))}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-3">
           <FilterBar
             sort={sort}
             setSort={setSort}
