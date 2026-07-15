@@ -74,15 +74,15 @@ export default function ClusterListPage() {
         </Link>
       </div>
 
-      <div className="mx-auto mt-3 max-w-3xl rounded-3xl bg-white/60 p-3 shadow-sm backdrop-blur-sm sm:p-4">
+      <div className="mx-auto mt-2 max-w-3xl rounded-2xl bg-white/60 p-2 shadow-sm backdrop-blur-sm sm:p-3">
         <div className="flex gap-1 rounded-full bg-black/5 p-1">
           {Object.entries(TRACK_INFO).map(([key, t]) => (
             <button
               key={key}
               type="button"
               onClick={() => navigate(`/${key}`)}
-              className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                requestType === key ? 'bg-brand text-white shadow-sm' : 'text-bakfg/60 hover:bg-black/5'
+              className={`flex-1 rounded-full px-4 py-1 text-sm font-medium transition-colors ${
+                requestType === key ? 'bg-brand text-white shadow-sm' : 'bg-brand/15 text-brand hover:bg-brand/25'
               }`}
             >
               {t.emoji} {t.label}
@@ -90,7 +90,7 @@ export default function ClusterListPage() {
           ))}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-2">
           <FilterBar
             sort={sort}
             setSort={setSort}
