@@ -60,8 +60,8 @@ export default function ClusterListPage() {
   const info = TRACK_INFO[requestType]
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
-      <div className="flex items-center justify-between gap-3">
+    <div className="px-4 py-6">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-bakfg">{info.title}</h1>
           <p className="mt-0.5 text-sm text-bakfg/50">{info.subtitle}</p>
@@ -74,17 +74,15 @@ export default function ClusterListPage() {
         </Link>
       </div>
 
-      <div className="mt-4 rounded-3xl bg-gradient-to-b from-panel to-brand-dark p-4 shadow-lg sm:p-6">
-        <div className="flex gap-1 rounded-full bg-white/10 p-1">
+      <div className="mx-auto mt-4 max-w-3xl rounded-3xl bg-white/60 p-4 shadow-sm backdrop-blur-sm sm:p-6">
+        <div className="flex gap-1 rounded-full bg-black/5 p-1">
           {Object.entries(TRACK_INFO).map(([key, t]) => (
             <button
               key={key}
               type="button"
               onClick={() => navigate(`/${key}`)}
               className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                requestType === key
-                  ? 'bg-white text-navy shadow-sm'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                requestType === key ? 'bg-brand text-white shadow-sm' : 'text-bakfg/60 hover:bg-black/5'
               }`}
             >
               {t.emoji} {t.label}
@@ -102,17 +100,22 @@ export default function ClusterListPage() {
             setRange={setRange}
           />
         </div>
+      </div>
 
-        <div className="mt-2">
-          {loading && <p className="px-1 text-white/60">טוען...</p>}
-          {error && <p className="px-1 text-red-300">{error}</p>}
-          {!loading && !error && items.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center text-white/60">
-              אין עדיין בקשות בטווח/סינון הנבחר.
-            </div>
-          )}
-          {!loading && !error && items.length > 0 && <ProductCloud items={items} onSelect={setSelected} />}
-        </div>
+      <div className="mt-2">
+        {loading && <p className="mx-auto max-w-3xl px-1 text-bakfg/50">טוען...</p>}
+        {error && <p className="mx-auto max-w-3xl px-1 text-red-600">{error}</p>}
+        {!loading && !error && items.length === 0 && (
+          <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-dashed border-black/10 bg-white/40 p-6 text-center text-bakfg/50">
+            אין עדיין בקשות בטווח/סינון הנבחר.
+          </div>
+        )}
+        {!loading && !error && items.length > 0 && (
+          // Breaks out of the centered max-w container so the cloud spans the full viewport width.
+          <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">
+            <ProductCloud items={items} onSelect={setSelected} />
+          </div>
+        )}
       </div>
 
       {selected && (

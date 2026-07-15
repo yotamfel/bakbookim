@@ -1,38 +1,47 @@
-// Size/prominence is driven by rank (position in the already-sorted list), not raw metric
-// value — this way "biggest" always tracks whatever the active sort means (top requests,
-// trending delta, or newest), without special-casing per sort mode.
-const MIN_FONT = 14
-const MAX_FONT = 46
+import { useEffect, useRef, useState } from 'react'
+import WordCloud from 'react-d3-cloud'
+
+// Muted brand-derived palette so the messy/organic layout still reads as "this site", not a
+// generic multicolor word cloud. Kept dark/medium-saturated throughout — anything as light as
+// the accent color (#b586ff) loses legibility against the page's own light background.
+const PALETTE = ['#0b0633', '#484bdd', '#334fb4', '#6b3fa0', '#5b3a99', '#2d2560', '#7a3fae']
 
 export default function ProductCloud({ items, onSelect }) {
+  const containerRef = useRef(null)
+  const [width, setWidth] = useState(800)
+
+  useEffect(() => {
+    function measure() {
+      if (containerRef.current) setWidth(containerRef.current.offsetWidth)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
   const n = items.length
+  // Weight by rank in the already-sorted list, not the raw metric — so "biggest" always
+  // tracks whatever the active sort/filter emphasizes (top requests, trending, or newest).
+  const data = items.map((item, index) => ({
+    text: item.canonical_name,
+    value: n - index,
+    cluster: item,
+  }))
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2 py-6">
-      {items.map((item, index) => {
-        const t = n > 1 ? 1 - index / (n - 1) : 1
-        const fontSize = MIN_FONT + t * (MAX_FONT - MIN_FONT)
-        const opacity = 0.5 + t * 0.5
-        const weight = t > 0.55 ? 700 : 500
-
-        return (
-          <button
-            key={item.cluster_id}
-            type="button"
-            onClick={() => onSelect(item)}
-            style={{ fontSize: `${fontSize}px`, opacity, fontWeight: weight }}
-            className="rounded-lg px-1 leading-tight text-white transition-transform duration-150 hover:scale-110"
-            title={`${item.total_requests} בקשות`}
-          >
-            {item.canonical_name}
-            {item.status_note && (
-              <span className="mr-1 rounded-full bg-amber-300/90 px-1.5 align-middle text-[10px] font-bold text-amber-900">
-                {item.status_note}
-              </span>
-            )}
-          </button>
-        )
-      })}
+    <div ref={containerRef} className="product-cloud w-full">
+      <WordCloud
+        data={data}
+        width={width}
+        height={640}
+        font="Heebo"
+        fontWeight="300"
+        fontSize={(word) => 12 + Math.sqrt(word.value / n) * 40}
+        rotate={() => 0}
+        padding={6}
+        fill={(_d, i) => PALETTE[i % PALETTE.length]}
+        onWordClick={(_event, word) => onSelect(word.cluster)}
+      />
     </div>
   )
 }

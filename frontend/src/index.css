@@ -39,3 +39,15 @@ h2,
 h3 {
   font-family: var(--font-heading);
 }
+
+.product-cloud text {
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.product-cloud text:hover {
+  opacity: 1 !important;
+  transform: scale(1.15);
+}
