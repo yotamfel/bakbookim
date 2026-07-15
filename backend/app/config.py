@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     rate_limit_per_hour: int = 20
 
     # Public list size (section 9 of spec — config, not hardcoded)
-    list_top_n: int = 30
+    list_top_n: int = 50
 
     # Clustering: cosine similarity threshold to join an existing cluster
     cluster_similarity_threshold: float = 0.86

@@ -1,16 +1,37 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import ClusterCard from '../components/ClusterCard'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import FilterBar from '../components/FilterBar'
+import ProductCloud from '../components/ProductCloud'
+import ProductSidePanel from '../components/ProductSidePanel'
 import { api } from '../lib/api'
 
-export default function ClusterListPage({ requestType, title, subtitle }) {
+const TRACK_INFO = {
+  return: {
+    label: 'התגעגענו אליהם',
+    emoji: '🍾',
+    title: 'מוצרים שהתגעגענו אליהם',
+    subtitle: 'מוצרים שכבר היו בפרויקטים של הקהילה בעבר ואתם רוצים שיחזרו',
+  },
+  new: {
+    label: 'בא לנו לנסות',
+    emoji: '✨',
+    title: 'מוצרים שבא לנו לנסות',
+    subtitle: 'מוצרים שמעולם לא הוצעו בפרויקטים של הקהילה',
+  },
+}
+
+export default function ClusterListPage() {
+  const { requestType: paramType } = useParams()
+  const navigate = useNavigate()
+  const requestType = paramType === 'new' ? 'new' : 'return'
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sort, setSort] = useState('top')
   const [category, setCategory] = useState('')
   const [range, setRange] = useState('month')
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -32,15 +53,21 @@ export default function ClusterListPage({ requestType, title, subtitle }) {
     }
   }, [requestType, sort, category, range])
 
+  function refreshList() {
+    api.getList(requestType, { sort, category, range }).then(setItems)
+  }
+
+  const info = TRACK_INFO[requestType]
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-bakfg">{title}</h1>
-          {subtitle && <p className="mt-0.5 text-sm text-bakfg/50">{subtitle}</p>}
+          <h1 className="font-heading text-2xl font-bold text-bakfg">{info.title}</h1>
+          <p className="mt-0.5 text-sm text-bakfg/50">{info.subtitle}</p>
         </div>
         <Link
-          to="/request"
+          to={`/request/${requestType}`}
           className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
           שליחת בקשה
@@ -48,21 +75,49 @@ export default function ClusterListPage({ requestType, title, subtitle }) {
       </div>
 
       <div className="mt-4 rounded-3xl bg-gradient-to-b from-panel to-brand-dark p-4 shadow-lg sm:p-6">
-        <FilterBar sort={sort} setSort={setSort} category={category} setCategory={setCategory} range={range} setRange={setRange} />
+        <div className="flex gap-1 rounded-full bg-white/10 p-1">
+          {Object.entries(TRACK_INFO).map(([key, t]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => navigate(`/${key}`)}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                requestType === key
+                  ? 'bg-white text-navy shadow-sm'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {t.emoji} {t.label}
+            </button>
+          ))}
+        </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4">
+          <FilterBar
+            sort={sort}
+            setSort={setSort}
+            category={category}
+            setCategory={setCategory}
+            range={range}
+            setRange={setRange}
+          />
+        </div>
+
+        <div className="mt-2">
           {loading && <p className="px-1 text-white/60">טוען...</p>}
           {error && <p className="px-1 text-red-300">{error}</p>}
           {!loading && !error && items.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center text-white/60">
+            <div className="mt-4 rounded-2xl border border-dashed border-white/20 bg-white/5 p-6 text-center text-white/60">
               אין עדיין בקשות בטווח/סינון הנבחר.
             </div>
           )}
-          {items.map((cluster, index) => (
-            <ClusterCard key={cluster.cluster_id} cluster={cluster} rank={index + 1} />
-          ))}
+          {!loading && !error && items.length > 0 && <ProductCloud items={items} onSelect={setSelected} />}
         </div>
       </div>
+
+      {selected && (
+        <ProductSidePanel cluster={selected} onClose={() => setSelected(null)} onJoined={refreshList} />
+      )}
     </div>
   )
 }
