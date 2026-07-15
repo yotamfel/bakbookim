@@ -12,8 +12,8 @@
   --color-panel: #26327d;
   --color-accent: #b586ff;
 
-  --font-sans: 'Assistant', system-ui, sans-serif;
-  --font-heading: 'Miriam Libre', 'Alef', system-ui, sans-serif;
+  --font-sans: 'Noto Serif Hebrew', system-ui, serif;
+  --font-heading: 'Noto Serif Hebrew', system-ui, serif;
 }
 
 html,
