@@ -19,10 +19,43 @@ const MAX_FONT = 40
 // 6 onward, words are sized in tiers of 5 — ranks 6-10 share a size, 11-15 the next size down,
 // and so on.
 const GROUP_SIZE = 5
+// Rough average glyph width/height for Noto Serif Hebrew at weight 300, as a fraction of font
+// size — used to estimate how much canvas area the full word list needs at nominal sizing.
+// Without this, a fixed MAX_FONT tuned for a wide desktop screen can ask d3-cloud to pack far more
+// "ink" than a narrow phone canvas can hold — d3-cloud doesn't shrink words to make them fit, it
+// silently drops whichever ones don't find a free spot within its placement attempts.
+const CHAR_WIDTH_RATIO = 0.5
+const LINE_HEIGHT_RATIO = 1.3
+// d3-cloud's spiral placement can't tile words edge-to-edge like a bin-packer — real achievable
+// fill is well under 100% of the canvas. Conservative so words fit reliably rather than tuning for
+// the smallest gap that "just barely" works.
+const PACKING_EFFICIENCY = 0.35
+const ABS_MIN_FONT = 8
 
 function tierOf(rank) {
   if (rank < GROUP_SIZE) return rank
   return GROUP_SIZE + Math.floor((rank - GROUP_SIZE) / GROUP_SIZE)
+}
+
+function nominalFontSize(rank, maxTier) {
+  const tier = tierOf(rank)
+  const t = maxTier > 0 ? 1 - tier / maxTier : 1
+  return MIN_FONT + t * (MAX_FONT - MIN_FONT)
+}
+
+// Scales the whole MIN_FONT..MAX_FONT range down together so the estimated total area of every
+// word (at nominal size) fits the available canvas area — instead of only capping the single
+// longest word's width, which left plenty of smaller words free to overflow the packable area.
+function fontScaleForFit(width, height, data, maxTier) {
+  const neededArea = data.reduce((sum, word) => {
+    const fontSize = nominalFontSize(word.rank, maxTier)
+    const w = word.text.length * fontSize * CHAR_WIDTH_RATIO
+    const h = fontSize * LINE_HEIGHT_RATIO
+    return sum + w * h
+  }, 0)
+  if (neededArea === 0) return 1
+  const availableArea = width * height * PACKING_EFFICIENCY
+  return Math.min(1, Math.sqrt(availableArea / neededArea))
 }
 
 export default function ProductCloud({ items, onSelect }) {
@@ -56,6 +89,9 @@ export default function ProductCloud({ items, onSelect }) {
     cluster: item,
   }))
   const maxTier = tierOf(Math.max(n - 1, 0))
+  const scale = fontScaleForFit(size.width, size.height, data, maxTier)
+  const effectiveMaxFont = Math.max(ABS_MIN_FONT, MAX_FONT * scale)
+  const effectiveMinFont = Math.max(ABS_MIN_FONT, MIN_FONT * scale)
 
   return (
     <div
@@ -72,7 +108,7 @@ export default function ProductCloud({ items, onSelect }) {
         fontSize={(word) => {
           const tier = tierOf(word.rank)
           const t = maxTier > 0 ? 1 - tier / maxTier : 1
-          return MIN_FONT + t * (MAX_FONT - MIN_FONT)
+          return effectiveMinFont + t * (effectiveMaxFont - effectiveMinFont)
         }}
         rotate={() => 0}
         padding={7}
