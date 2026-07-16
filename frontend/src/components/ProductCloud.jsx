@@ -19,20 +19,10 @@ const MAX_FONT = 40
 // 6 onward, words are sized in tiers of 5 — ranks 6-10 share a size, 11-15 the next size down,
 // and so on.
 const GROUP_SIZE = 5
-// Real product names will mostly be brand + model (+ year) — several words, not one. Truncating
-// the on-screen label keeps every word's visual footprint roughly constant regardless of how long
-// the full name is, so the cloud doesn't get denser as names grow. The full name is still shown
-// untruncated in the side panel on click.
-const MAX_CHARS = 20
 
 function tierOf(rank) {
   if (rank < GROUP_SIZE) return rank
   return GROUP_SIZE + Math.floor((rank - GROUP_SIZE) / GROUP_SIZE)
-}
-
-function truncate(text) {
-  if (text.length <= MAX_CHARS) return text
-  return `${text.slice(0, MAX_CHARS - 1).trimEnd()}…`
 }
 
 export default function ProductCloud({ items, onSelect }) {
@@ -60,7 +50,7 @@ export default function ProductCloud({ items, onSelect }) {
   // Weight by rank in the already-sorted list, not the raw metric — so "biggest" always
   // tracks whatever the active sort/filter emphasizes (top requests, trending, or newest).
   const data = items.map((item, index) => ({
-    text: truncate(item.canonical_name),
+    text: item.canonical_name,
     value: n - index,
     rank: index,
     cluster: item,
