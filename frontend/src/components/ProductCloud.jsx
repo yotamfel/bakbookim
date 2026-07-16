@@ -7,8 +7,9 @@ import WordCloud from 'react-d3-cloud'
 // page's own light background.
 const PALETTE = ['#0b0633', '#484bdd', '#7a1f3d', '#334fb4', '#5b3a99', '#8a3a5c', '#2d2560', '#3f6b6a']
 
-// Reserve space below the cloud for the footer link so the page never needs to scroll.
-const BOTTOM_RESERVE = 95
+// Reserve space below the cloud for the footer link so the page never needs to scroll — just
+// enough clearance to not crowd the "ניהול" link, not a large empty gap.
+const BOTTOM_RESERVE = 55
 const MIN_HEIGHT = 260
 const MIN_FONT = 10
 // Kept modest rather than dramatic — longer product names will need the horizontal room, and an
